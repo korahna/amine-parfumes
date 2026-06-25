@@ -1,0 +1,68 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "shop": "المتجر",
+    "decants": "عينات",
+    "cart": "السلة"
+  },
+  "hero": {
+    "title": "amine.parfume",
+    "subtitle": "فن العطر في المغرب",
+    "cta": "اكتشف المتجر"
+  },
+  "product": {
+    "addToCart": "أضف إلى السلة",
+    "inStock": "متوفر",
+    "outOfStock": "غير متوفر",
+    "topNotes": "المقدمة",
+    "heartNotes": "القلب",
+    "baseNotes": "القاعدة",
+    "volume": "الحجم",
+    "ml": "مل",
+    "fullBottle": "زجاجة كاملة",
+    "decant": "عينة"
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "empty": "سلة التسوق فارغة",
+    "subtotal": "المجموع الفرعي",
+    "checkout": "إتمام الطلب",
+    "remove": "إزالة",
+    "quantity": "الكمية"
+  },
+  "checkout": {
+    "title": "إتمام الطلب",
+    "name": "الاسم الكامل",
+    "phone": "الهاتف",
+    "address": "العنوان",
+    "city": "المدينة",
+    "wilaya": "الولاية",
+    "cod": "الدفع عند التسليم",
+    "placeOrder": "تأكيد الطلب",
+    "success": "تم تأكيد الطلب!",
+    "successMessage": "سنتواصل معك قريبًا لتأكيد طلبك."
+  },
+  "admin": {
+    "dashboard": "لوحة التحكم",
+    "products": "المنتجات",
+    "orders": "الطلبات",
+    "categories": "الفئات",
+    "settings": "الإعدادات",
+    "addProduct": "إضافة منتج",
+    "recentOrders": "الطلبات الأخيرة",
+    "totalProducts": "إجمالي المنتجات",
+    "totalOrders": "إجمالي الطلبات",
+    "revenue": "الإيرادات"
+  },
+  "common": {
+    "search": "بحث",
+    "loading": "جارٍ التحميل...",
+    "noResults": "لا توجد عطور تطابق بحثك...",
+    "error": "حدث خطأ",
+    "retry": "إعادة المحاولة",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل"
+  }
+}
