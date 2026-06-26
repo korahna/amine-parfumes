@@ -1,23 +1,19 @@
+import createMiddleware from 'next-intl/middleware'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const defaultLocale = 'fr'
 const locales = ['fr', 'ar']
+const defaultLocale = 'fr'
+
+const intlMiddleware = createMiddleware({
+  locales,
+  defaultLocale,
+})
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Redirect bare `/` to default locale
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL(`/${defaultLocale}`, request.url))
-  }
-
-  // Skip locale redirect for non-locale paths (admin, api, etc.)
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  )
-
-  // For admin routes, handle auth
+  // Handle admin routes with Supabase auth
   if (pathname.startsWith('/admin')) {
     let supabaseResponse = NextResponse.next({ request })
 
@@ -59,9 +55,10 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  return NextResponse.next()
+  // Handle locale routing for all other routes
+  return intlMiddleware(request)
 }
 
 export const config = {
-  matcher: ['/', '/admin/:path*'],
+  matcher: ['/', '/(fr|ar)/:path*', '/admin/:path*'],
 }
