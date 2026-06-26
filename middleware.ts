@@ -25,14 +25,22 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
-
+  // Refresh session
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith('/admin') && !user) {
+  // Protect /admin routes except /admin/login
+  const pathname = request.nextUrl.pathname
+  const isLoginPage = pathname === '/admin/login'
+
+  if (pathname.startsWith('/admin') && !isLoginPage && !user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
+  }
+
+  // Redirect authenticated users away from login page
+  if (isLoginPage && user) {
+    return NextResponse.redirect(new URL('/admin', request.url))
   }
 
   return supabaseResponse

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface CartItem {
   productId: string
@@ -24,46 +25,76 @@ interface CartState {
   totalPrice: () => number
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
-  isOpen: false,
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isOpen: false,
 
-  addItem: (item) =>
-    set((state) => {
-      const existing = state.items.find((i) => i.productId === item.productId)
-      if (existing) {
-        return {
-          items: state.items.map((i) =>
-            i.productId === item.productId
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
-          ),
-        }
-      }
-      return { items: [...state.items, { ...item, quantity: 1 }] }
+      addItem: (item) =>
+        set((state) => {
+          const existing = state.items.find((i) => i.productId === item.productId)
+          if (existing) {
+            return {
+              items: state.items.map((i) =>
+                i.productId === item.productId
+                  ? { ...i, quantity: i.quantity + 1 }
+                  : i
+              ),
+            }
+          }
+          return { items: [...state.items, { ...item, quantity: 1 }] }
+        }),
+
+      removeItem: (productId) =>
+        set((state) => ({
+          items: state.items.filter((i) => i.productId !== productId),
+        })),
+
+      updateQuantity: (productId, quantity) =>
+        set((state) => ({
+          items:
+            quantity <= 0
+              ? state.items.filter((i) => i.productId !== productId)
+              : state.items.map((i) =>
+                  i.productId === productId ? { ...i, quantity } : i
+                ),
+        })),
+
+      clearCart: () => set({ items: [] }),
+      toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+      openCart: () => set({ isOpen: true }),
+      closeCart: () => set({ isOpen: false }),
+
+      totalItems: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
+      totalPrice: () =>
+        get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     }),
+    {
+      name: 'amine-cart',
+      partialize: (state) => ({ items: state.items }),
+    }
+  )
+)
 
-  removeItem: (productId) =>
-    set((state) => ({
-      items: state.items.filter((i) => i.productId !== productId),
-    })),
+// ─── Filter Store (Boutique) ────────────────────────────────────
 
-  updateQuantity: (productId, quantity) =>
-    set((state) => ({
-      items:
-        quantity <= 0
-          ? state.items.filter((i) => i.productId !== productId)
-          : state.items.map((i) =>
-              i.productId === productId ? { ...i, quantity } : i
-            ),
-    })),
+interface FilterState {
+  category: string | null
+  scentFamily: string | null
+  type: 'full' | 'decant' | null
+  setCategory: (category: string | null) => void
+  setScentFamily: (family: string | null) => void
+  setType: (type: 'full' | 'decant' | null) => void
+  resetFilters: () => void
+}
 
-  clearCart: () => set({ items: [] }),
-  toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-  openCart: () => set({ isOpen: true }),
-  closeCart: () => set({ isOpen: false }),
-
-  totalItems: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
-  totalPrice: () =>
-    get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+export const useFilterStore = create<FilterState>((set) => ({
+  category: null,
+  scentFamily: null,
+  type: null,
+  setCategory: (category) => set({ category }),
+  setScentFamily: (scentFamily) => set({ scentFamily }),
+  setType: (type) => set({ type }),
+  resetFilters: () => set({ category: null, scentFamily: null, type: null }),
 }))

@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@400;500;600&family=Noto+Serif+Arabic:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 :root {
   --color-bg: #0a0805;
@@ -42,7 +44,27 @@ body {
   font-family: var(--font-noto-arabic);
 }
 
+/* Material Symbols base */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 /* Skeleton shimmer animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #13100c 25%,
+    #1f1a12 50%,
+    #13100c 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
 @layer utilities {
   .skeleton-shimmer {
     background: linear-gradient(
@@ -54,15 +76,63 @@ body {
     background-size: 200% 100%;
     animation: shimmer 2s ease-in-out infinite;
   }
+}
 
-  @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
   }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Stitch - Glass panel */
+.glass-panel {
+  background: rgba(22, 19, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(204, 198, 181, 0.1);
+}
+
+/* Stitch - Input underline */
+.input-underline {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #ccc6b5;
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 0;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-underline:focus {
+  outline: none;
+  border-bottom: 2px solid #e6c364;
+  box-shadow: none;
+  background: transparent;
+}
+
+.input-underline::placeholder {
+  color: #99907e;
+}
+
+/* Stitch - Fade in animation */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Stitch - Glass nav */
+.glass-nav {
+  background-color: rgba(22, 19, 15, 0.8);
+  backdrop-filter: blur(12px);
 }
 
 /* Focus ring style */
