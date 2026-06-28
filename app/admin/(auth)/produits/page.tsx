@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Star, Check, X, Pencil, Trash2 } from 'lucide-react'
 
 interface Product {
   id: string
@@ -161,7 +162,7 @@ export default function AdminProductsPage() {
                     }`}
                     title={product.featured ? 'Retirer des vedettes' : 'Mettre en vedette'}
                   >
-                    <span className="material-symbols-outlined text-sm">star</span>
+                    <Star size={14} />
                   </button>
                   <button
                     onClick={() => toggleStock(product.id, product.in_stock)}
@@ -172,23 +173,21 @@ export default function AdminProductsPage() {
                     }`}
                     title={product.in_stock ? 'Marquer en rupture' : 'Marquer en stock'}
                   >
-                    <span className="material-symbols-outlined text-sm">
-                      {product.in_stock ? 'check' : 'close'}
-                    </span>
+                    {product.in_stock ? <Check size={14} /> : <X size={14} />}
                   </button>
                   <Link
                     href={`/admin/produits/${product.id}/edit`}
                     className="w-8 h-8 rounded-full border border-on-surface-variant/30 text-on-surface-variant hover:border-primary hover:text-primary flex items-center justify-center transition-colors"
                     title="Modifier"
                   >
-                    <span className="material-symbols-outlined text-sm">edit</span>
+                    <Pencil size={14} />
                   </Link>
                   <button
                     onClick={() => deleteProduct(product.id)}
                     className="w-8 h-8 rounded-full border border-on-surface-variant/30 text-on-surface-variant hover:border-red-500/30 hover:text-red-400 flex items-center justify-center transition-colors"
                     title="Supprimer"
                   >
-                    <span className="material-symbols-outlined text-sm">delete</span>
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

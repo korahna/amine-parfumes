@@ -2,12 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { LayoutDashboard, Package, ShoppingBag, LayoutGrid, Settings, LogOut } from 'lucide-react'
 
 const navItems = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/admin/produits', label: 'Produits', icon: 'inventory_2' },
-  { href: '/admin/commandes', label: 'Commandes', icon: 'local_mall' },
-  { href: '/admin/categories', label: 'Catégories', icon: 'category' },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/produits', label: 'Produits', icon: Package },
+  { href: '/admin/commandes', label: 'Commandes', icon: ShoppingBag },
+  { href: '/admin/categories', label: 'Catégories', icon: LayoutGrid },
+  { href: '/admin/settings', label: 'Paramètres', icon: Settings },
 ]
 
 export function AdminSidebar() {
@@ -26,6 +28,7 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-4">
         {navItems.map((item) => {
+          const Icon = item.icon
           const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
           return (
             <Link
@@ -37,7 +40,7 @@ export function AdminSidebar() {
                   : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined text-xl">{item.icon}</span>
+              <Icon size={20} />
               <span className="font-body-md text-body-md">{item.label}</span>
             </Link>
           )
@@ -48,10 +51,10 @@ export function AdminSidebar() {
       <div className="px-6 py-4 border-t border-outline-variant/30">
         <Link
           href="/"
-          className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors duration-300"
+          className="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors duration-300"
         >
-          <span className="material-symbols-outlined text-sm">open_in_new</span>
-          <span className="font-label-caps text-label-caps">Voir le site</span>
+          <LogOut size={20} />
+          <span className="font-body-md text-body-md">Retour au site</span>
         </Link>
       </div>
     </aside>

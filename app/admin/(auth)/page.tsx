@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Bell, Wallet, ShoppingBag, Package, ArrowRight, User } from 'lucide-react'
 
 interface Order {
   id: string
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
       {/* New order alert */}
       {newOrderAlert && (
         <div className="bg-primary/10 border border-primary/30 rounded-lg px-6 py-4 flex items-center gap-3 animate-in fade-in duration-300">
-          <span className="material-symbols-outlined text-primary">notifications_active</span>
+          <Bell size={20} className="text-primary" />
           <span className="font-body-md text-body-md text-primary">{newOrderAlert}</span>
         </div>
       )}
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
         {/* Revenue Card */}
         <div className="bg-surface-container-low p-6 rounded-lg flex flex-col gap-4">
           <div className="flex items-center gap-2 text-on-surface-variant">
-            <span className="material-symbols-outlined">account_balance_wallet</span>
+            <Wallet size={20} />
             <span className="font-label-caps text-label-caps">Revenue</span>
           </div>
           {loading ? (
@@ -124,7 +125,7 @@ export default function AdminDashboard() {
         {/* Orders Card */}
         <div className="bg-surface-container-low p-6 rounded-lg flex flex-col gap-4">
           <div className="flex items-center gap-2 text-on-surface-variant">
-            <span className="material-symbols-outlined">local_mall</span>
+            <ShoppingBag size={20} />
             <span className="font-label-caps text-label-caps">Commandes</span>
           </div>
           {loading ? (
@@ -145,7 +146,7 @@ export default function AdminDashboard() {
           <div className="relative z-10 flex justify-between items-center">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-on-surface-variant">
-                <span className="material-symbols-outlined">inventory_2</span>
+                <Package size={20} />
                 <span className="font-label-caps text-label-caps">Produits en catalogue</span>
               </div>
               {loading ? (
@@ -156,8 +157,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-            <Link href="/admin/produits" className="material-symbols-outlined text-primary text-4xl opacity-50 hover:opacity-80 transition-opacity">
-              arrow_forward
+            <Link href="/admin/produits" className="text-primary opacity-50 hover:opacity-80 transition-opacity">
+              <ArrowRight size={32} />
             </Link>
           </div>
         </div>
@@ -197,7 +198,7 @@ export default function AdminDashboard() {
               <Link key={order.id} href="/admin/commandes" className="bg-surface-container p-4 flex justify-between items-center rounded-lg hover:bg-surface-container-highest transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center text-on-surface-variant">
-                    <span className="material-symbols-outlined">person</span>
+                    <User size={20} />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-body-md text-body-md text-on-surface">{order.customer_name}</span>
