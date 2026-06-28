@@ -60,5 +60,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/(fr|ar)/:path*', '/admin/:path*'],
+  matcher: [
+    // Skip internal paths and static files
+    '/((?!api|_next|_vercel|.*\\..*).*)',
+  ],
 }
