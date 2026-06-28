@@ -1,14 +1,10 @@
-import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
-const locales = ['fr', 'ar']
+export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'amine.parfume — L\'art du parfum au Maroc',
-  description: 'Parfums de luxe et échantillons. Découvrez notre collection de fragrances exclusives.',
-}
+const locales = ['fr', 'ar']
 
 export default async function LocaleLayout({
   children,
@@ -23,12 +19,10 @@ export default async function LocaleLayout({
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   return (
-    <html lang={locale} dir={dir}>
-      <body className="min-h-screen bg-bg text-text font-body antialiased">
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <div dir={dir} className="min-h-screen bg-background text-on-surface font-body antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+      <NextIntlClientProvider messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+    </div>
   )
 }
