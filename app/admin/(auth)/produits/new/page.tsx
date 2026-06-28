@@ -12,12 +12,14 @@ interface Category {
 }
 
 import { UnsplashPicker } from '@/components/admin/UnsplashPicker'
+import { ImageUpload } from '@/components/admin/ImageUpload'
 
 export default function AdminNewProductPage() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [imageSource, setImageSource] = useState<'upload' | 'unsplash'>('upload')
   const [form, setForm] = useState({
     name_fr: '',
     name_ar: '',
@@ -94,14 +96,45 @@ export default function AdminNewProductPage() {
       </section>
 
       <form onSubmit={handleSubmit} className="space-y-stack-lg">
-        {/* Image Selection — Unsplash Picker */}
+        {/* Image Selection */}
         <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
           <h3 className="font-label-caps text-label-caps text-on-surface-variant">Image du produit</h3>
-          <UnsplashPicker
-            selected={selectedImage}
-            onSelect={setSelectedImage}
-            brand={form.brand}
-          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setImageSource('upload')}
+              className={`font-label-caps text-label-caps px-4 py-2 transition-colors ${
+                imageSource === 'upload'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
+              }`}
+            >
+              Upload PC
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageSource('unsplash')}
+              className={`font-label-caps text-label-caps px-4 py-2 transition-colors ${
+                imageSource === 'unsplash'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
+              }`}
+            >
+              Unsplash
+            </button>
+          </div>
+          {imageSource === 'upload' ? (
+            <ImageUpload
+              onUpload={(url) => setSelectedImage(url || null)}
+              currentUrl={selectedImage}
+            />
+          ) : (
+            <UnsplashPicker
+              selected={selectedImage}
+              onSelect={setSelectedImage}
+              brand={form.brand}
+            />
+          )}
         </div>
 
         {/* Bilingual Fields */}
