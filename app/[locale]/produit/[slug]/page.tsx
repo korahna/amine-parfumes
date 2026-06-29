@@ -18,6 +18,7 @@ interface Product {
   type: 'full' | 'decant'
   price: number
   volume: number | null
+  variants: { volume: number; price: number }[] | null
   images: string[]
   scent_notes: { top: string[]; heart: string[]; base: string[] }
 }
@@ -25,7 +26,7 @@ interface Product {
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedVolume, setSelectedVolume] = useState<string>('')
+  const [selectedVariant, setSelectedVariant] = useState<{ volume: number; price: number } | null>(null)
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
 
@@ -40,7 +41,8 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
       if (data) {
         setProduct(data)
-        if (data.volume) setSelectedVolume(`${data.volume} ML`)
+        const v = data.variants?.length ? data.variants : (data.volume ? [{ volume: data.volume, price: data.price }] : [])
+        if (v.length > 0) setSelectedVariant(v[0])
       }
       setLoading(false)
     }
@@ -101,7 +103,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     ...(product.scent_notes?.heart ?? []),
     ...(product.scent_notes?.base ?? []),
   ]
-  const volumes = product.type === 'decant' ? ['5 ML', '10 ML'] : ['30 ML', '50 ML', '100 ML']
+  const variants = product.variants?.length
+    ? product.variants
+    : (product.volume ? [{ volume: product.volume, price: product.price }] : [])
 
   return (
     <>
@@ -180,46 +184,51 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             )}
 
             {/* Volume Selector */}
-            <div className="mb-12">
-              <span className="block font-label-caps text-label-caps text-on-surface-variant mb-4">FORMAT</span>
-              <div className="flex gap-4">
-                {volumes.map((vol) => (
-                  <button
-                    key={vol}
-                    onClick={() => setSelectedVolume(vol)}
-                    className={`flex-1 py-3 border font-label-caps text-label-caps transition-colors duration-300 ${
-                      selectedVolume === vol
-                        ? 'border-primary text-primary bg-primary/10'
-                        : 'border-outline hover:border-primary text-on-surface'
-                    }`}
-                  >
-                    {vol}
-                  </button>
-                ))}
+            {variants.length > 0 && (
+              <div className="mb-12">
+                <span className="block font-label-caps text-label-caps text-on-surface-variant mb-4">FORMAT</span>
+                <div className="flex gap-4 flex-wrap">
+                  {variants.map((v) => (
+                    <button
+                      key={v.volume}
+                      onClick={() => setSelectedVariant(v)}
+                      className={`flex-1 min-w-[80px] py-3 border font-label-caps text-label-caps transition-colors duration-300 ${
+                        selectedVariant?.volume === v.volume
+                          ? 'border-primary text-primary bg-primary/10'
+                          : 'border-outline hover:border-primary text-on-surface'
+                      }`}
+                    >
+                      {v.volume} ML
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col gap-4 mt-auto">
               <button
                 onClick={() => {
+                  if (!selectedVariant) return
                   addItem({
                     productId: product.id,
                     name: product.name_fr,
                     brand: product.brand,
-                    price: Number(product.price),
+                    price: selectedVariant.price,
+                    volume: selectedVariant.volume,
                     image: product.images?.[0] ?? '/images/placeholder.jpg',
                     type: product.type,
                   })
                   openCart()
                 }}
-                className="w-full bg-primary text-on-primary font-label-caps text-label-caps py-5 px-8 hover:bg-primary-fixed transition-colors duration-300 tracking-widest"
+                disabled={!selectedVariant}
+                className="w-full bg-primary text-on-primary font-label-caps text-label-caps py-5 px-8 hover:bg-primary-fixed transition-colors duration-300 tracking-widest disabled:opacity-50"
               >
-                AJOUTER AU PANIER — {Number(product.price).toLocaleString('fr-MA')} DH
+                AJOUTER AU PANIER — {selectedVariant ? `${selectedVariant.volume} ML — ${selectedVariant.price.toLocaleString('fr-MA')} DH` : 'Choisir un format'}
               </button>
               <a
                 href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '212600000000'}?text=${encodeURIComponent(
-                  `Bonjour, je suis intéressé(e) par:\n\n*${product.brand} — ${product.name_fr}*\n${product.type === 'decant' ? 'Échantillon' : 'Flacon'} — ${Number(product.price).toLocaleString('fr-MA')} MAD\n\nMerci!`
+                  `Bonjour, je suis intéressé(e) par:\n\n*${product.brand} — ${product.name_fr}*\n${selectedVariant ? `${selectedVariant.volume} ML — ${selectedVariant.price.toLocaleString('fr-MA')} MAD` : ''}\n\nMerci!`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

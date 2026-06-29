@@ -52,7 +52,7 @@ export default function CartPage() {
             {/* Items */}
             <div className="md:col-span-7 space-y-6">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-4 p-4 bg-surface-container-low rounded-sm">
+                <div key={`${item.productId}-${item.volume ?? ''}`} className="flex gap-4 p-4 bg-surface-container-low rounded-sm">
                   <div className="w-24 h-24 relative flex-shrink-0 rounded-sm overflow-hidden bg-surface-container-high">
                     <Image
                       src={item.image}
@@ -65,19 +65,19 @@ export default function CartPage() {
                     <div>
                       <p className="font-label-caps text-label-caps text-on-surface-variant tracking-[0.2em]">{item.brand.toUpperCase()}</p>
                       <h3 className="font-body-lg text-body-lg text-on-surface">{item.name}</h3>
-                      <p className="font-body-md text-body-md text-on-surface-variant">{item.type === 'decant' ? 'Échantillon' : 'Flacon'}</p>
+                      <p className="font-body-md text-body-md text-on-surface-variant">{item.type === 'decant' ? 'Échantillon' : 'Flacon'}{item.volume ? ` — ${item.volume} ML` : ''}</p>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1, item.volume)}
                           className="w-8 h-8 border border-on-surface-variant/30 text-on-surface-variant hover:border-primary hover:text-primary transition-colors duration-300 flex items-center justify-center"
                         >
                           -
                         </button>
                         <span className="font-body-md text-body-md text-on-surface w-6 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1, item.volume)}
                           className="w-8 h-8 border border-on-surface-variant/30 text-on-surface-variant hover:border-primary hover:text-primary transition-colors duration-300 flex items-center justify-center"
                         >
                           +
@@ -87,7 +87,7 @@ export default function CartPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(item.productId)}
+                    onClick={() => removeItem(item.productId, item.volume)}
                     className="self-start text-on-surface-variant hover:text-primary transition-colors duration-300"
                     aria-label="Supprimer"
                   >
