@@ -170,20 +170,15 @@ export default function AdminNewProductPage() {
               <select name="volume" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
                 <option value="">Choisir</option>
                 <optgroup label="Échantillons">
-                  <option value="1">1 ml</option>
-                  <option value="2">2 ml</option>
                   <option value="3">3 ml</option>
                   <option value="5">5 ml</option>
                   <option value="10">10 ml</option>
                 </optgroup>
-                <optgroup label="Flacons">
-                  <option value="30">30 ml</option>
+                <optgroup label="Parfum Complet">
                   <option value="50">50 ml</option>
                   <option value="75">75 ml</option>
                   <option value="100">100 ml</option>
                   <option value="125">125 ml</option>
-                  <option value="150">150 ml</option>
-                  <option value="200">200 ml</option>
                 </optgroup>
               </select>
             </div>
