@@ -11,7 +11,6 @@ interface Category {
   name_fr: string
 }
 
-import { UnsplashPicker } from '@/components/admin/UnsplashPicker'
 import { ImageUpload } from '@/components/admin/ImageUpload'
 
 export default function AdminNewProductPage() {
@@ -19,7 +18,6 @@ export default function AdminNewProductPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [imageSource, setImageSource] = useState<'upload' | 'unsplash'>('upload')
   const [form, setForm] = useState({
     name_fr: '',
     name_ar: '',
@@ -96,45 +94,13 @@ export default function AdminNewProductPage() {
       </section>
 
       <form onSubmit={handleSubmit} className="space-y-stack-lg">
-        {/* Image Selection */}
+        {/* Image Upload */}
         <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
           <h3 className="font-label-caps text-label-caps text-on-surface-variant">Image du produit</h3>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setImageSource('upload')}
-              className={`font-label-caps text-label-caps px-4 py-2 transition-colors ${
-                imageSource === 'upload'
-                  ? 'bg-primary text-on-primary'
-                  : 'text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-              }`}
-            >
-              Upload PC
-            </button>
-            <button
-              type="button"
-              onClick={() => setImageSource('unsplash')}
-              className={`font-label-caps text-label-caps px-4 py-2 transition-colors ${
-                imageSource === 'unsplash'
-                  ? 'bg-primary text-on-primary'
-                  : 'text-on-surface-variant hover:text-on-surface border border-outline-variant/30'
-              }`}
-            >
-              Unsplash
-            </button>
-          </div>
-          {imageSource === 'upload' ? (
-            <ImageUpload
-              onUpload={(url) => setSelectedImage(url || null)}
-              currentUrl={selectedImage}
-            />
-          ) : (
-            <UnsplashPicker
-              selected={selectedImage}
-              onSelect={setSelectedImage}
-              brand={form.brand}
-            />
-          )}
+          <ImageUpload
+            onUpload={(url) => setSelectedImage(url || null)}
+            currentUrl={selectedImage}
+          />
         </div>
 
         {/* Bilingual Fields */}
@@ -201,7 +167,25 @@ export default function AdminNewProductPage() {
             </div>
             <div>
               <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Volume (ml)</label>
-              <input name="volume" type="number" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="50" />
+              <select name="volume" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
+                <option value="">Choisir</option>
+                <optgroup label="Échantillons">
+                  <option value="1">1 ml</option>
+                  <option value="2">2 ml</option>
+                  <option value="3">3 ml</option>
+                  <option value="5">5 ml</option>
+                  <option value="10">10 ml</option>
+                </optgroup>
+                <optgroup label="Flacons">
+                  <option value="30">30 ml</option>
+                  <option value="50">50 ml</option>
+                  <option value="75">75 ml</option>
+                  <option value="100">100 ml</option>
+                  <option value="125">125 ml</option>
+                  <option value="150">150 ml</option>
+                  <option value="200">200 ml</option>
+                </optgroup>
+              </select>
             </div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">

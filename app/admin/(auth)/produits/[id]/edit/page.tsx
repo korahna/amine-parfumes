@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { UnsplashPicker } from '@/components/admin/UnsplashPicker'
+import { ImageUpload } from '@/components/admin/ImageUpload'
 
 interface Category {
   id: string
@@ -155,13 +155,12 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
       </section>
 
       <form onSubmit={handleSubmit} className="space-y-stack-lg">
-        {/* Image Selection — Unsplash Picker */}
+        {/* Image Upload */}
         <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
           <h3 className="font-label-caps text-label-caps text-on-surface-variant">Image du produit</h3>
-          <UnsplashPicker
-            selected={selectedImage}
-            onSelect={setSelectedImage}
-            brand={form.brand}
+          <ImageUpload
+            onUpload={(url) => setSelectedImage(url || null)}
+            currentUrl={selectedImage}
           />
         </div>
 
@@ -229,7 +228,25 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Volume (ml)</label>
-              <input name="volume" type="number" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" />
+              <select name="volume" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
+                <option value="">Choisir</option>
+                <optgroup label="Échantillons">
+                  <option value="1">1 ml</option>
+                  <option value="2">2 ml</option>
+                  <option value="3">3 ml</option>
+                  <option value="5">5 ml</option>
+                  <option value="10">10 ml</option>
+                </optgroup>
+                <optgroup label="Flacons">
+                  <option value="30">30 ml</option>
+                  <option value="50">50 ml</option>
+                  <option value="75">75 ml</option>
+                  <option value="100">100 ml</option>
+                  <option value="125">125 ml</option>
+                  <option value="150">150 ml</option>
+                  <option value="200">200 ml</option>
+                </optgroup>
+              </select>
             </div>
           </div>
           <div className="flex items-center gap-6">
