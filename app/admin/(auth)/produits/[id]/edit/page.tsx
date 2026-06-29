@@ -23,11 +23,17 @@ interface Product {
   type: 'full' | 'decant'
   price: number
   volume: number | null
+  variants: { volume: number; price: number }[] | null
   category: string | null
   featured: boolean
   in_stock: boolean
   images: string[]
   scent_notes: { top: string[]; heart: string[]; base: string[] }
+}
+
+const volumeOptions = {
+  Échantillons: [3, 5, 10],
+  'Parfum Complet': [50, 75, 100, 125],
 }
 
 export default function AdminEditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,6 +43,7 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [variants, setVariants] = useState<{ volume: number; price: string }[]>([])
   const [form, setForm] = useState({
     name_fr: '',
     name_ar: '',
@@ -44,8 +51,6 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     description_ar: '',
     brand: '',
     type: 'full' as 'full' | 'decant',
-    price: '',
-    volume: '',
     category: '',
     slug: '',
     featured: false,
@@ -54,6 +59,18 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     notes_heart: '',
     notes_base: '',
   })
+
+  const toggleVolume = (vol: number) => {
+    setVariants((prev) => {
+      const exists = prev.find((v) => v.volume === vol)
+      if (exists) return prev.filter((v) => v.volume !== vol)
+      return [...prev, { volume: vol, price: '' }].sort((a, b) => a.volume - b.volume)
+    })
+  }
+
+  const updateVariantPrice = (vol: number, price: string) => {
+    setVariants((prev) => prev.map((v) => (v.volume === vol ? { ...v, price } : v)))
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,8 +90,6 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
           description_ar: p.description_ar ?? '',
           brand: p.brand,
           type: p.type,
-          price: String(p.price),
-          volume: p.volume ? String(p.volume) : '',
           category: p.category ?? '',
           slug: p.slug,
           featured: p.featured,
@@ -84,6 +99,13 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
           notes_base: (p.scent_notes?.base ?? []).join(', '),
         })
         setSelectedImage(p.images?.[0] ?? null)
+
+        // Load existing variants or fallback to single volume/price
+        if (p.variants && p.variants.length > 0) {
+          setVariants(p.variants.map((v) => ({ volume: v.volume, price: String(v.price) })))
+        } else if (p.volume) {
+          setVariants([{ volume: p.volume, price: String(p.price) }])
+        }
       }
 
       setCategories(categoriesRes.data ?? [])
@@ -104,6 +126,13 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     e.preventDefault()
     setSaving(true)
 
+    const validVariants = variants.filter((v) => v.price && parseFloat(v.price) > 0)
+    if (validVariants.length === 0) {
+      alert('Sélectionnez au moins un volume avec un prix')
+      setSaving(false)
+      return
+    }
+
     const supabase = createClient()
     const { error } = await supabase
       .from('products')
@@ -114,8 +143,9 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
         description_ar: form.description_ar || null,
         brand: form.brand,
         type: form.type,
-        price: parseFloat(form.price),
-        volume: form.volume ? parseInt(form.volume) : null,
+        price: parseFloat(validVariants[0].price),
+        volume: validVariants[0].volume,
+        variants: validVariants.map((v) => ({ volume: v.volume, price: parseFloat(v.price) })),
         category: form.category || null,
         slug: form.slug,
         featured: form.featured,
@@ -214,36 +244,55 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Type</label>
               <select name="type" value={form.type} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
-                <option value="full">Flacon</option>
+                <option value="full">Parfum Complet</option>
                 <option value="decant">Échantillon</option>
               </select>
             </div>
-            <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Prix (MAD)</label>
-              <input required name="price" type="number" value={form.price} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" />
-            </div>
-            <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Volume (ml)</label>
-              <select name="volume" value={form.volume} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
-                <option value="">Choisir</option>
-                <optgroup label="Échantillons">
-                  <option value="3">3 ml</option>
-                  <option value="5">5 ml</option>
-                  <option value="10">10 ml</option>
-                </optgroup>
-                <optgroup label="Parfum Complet">
-                  <option value="50">50 ml</option>
-                  <option value="75">75 ml</option>
-                  <option value="100">100 ml</option>
-                  <option value="125">125 ml</option>
-                </optgroup>
-              </select>
-            </div>
           </div>
+
+          {/* Volume & Price */}
+          <div className="space-y-4">
+            <label className="font-label-caps text-label-caps text-on-surface-variant">Volumes & Prix</label>
+            {Object.entries(volumeOptions).map(([group, vols]) => (
+              <div key={group} className="space-y-2">
+                <p className="text-xs text-on-surface-variant/70 tracking-wider uppercase">{group}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {vols.map((vol) => {
+                    const selected = variants.find((v) => v.volume === vol)
+                    return (
+                      <div key={vol} className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleVolume(vol)}
+                          className={`w-16 h-10 text-sm font-medium border rounded transition-colors ${
+                            selected
+                              ? 'bg-primary text-on-primary border-primary'
+                              : 'border-outline-variant/40 text-on-surface-variant hover:border-primary'
+                          }`}
+                        >
+                          {vol} ml
+                        </button>
+                        {selected && (
+                          <input
+                            type="number"
+                            value={selected.price}
+                            onChange={(e) => updateVariantPrice(vol, e.target.value)}
+                            placeholder="Prix MAD"
+                            className="input-underline flex-1 font-body-md text-on-surface py-2 text-sm"
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-3 cursor-pointer">
               <input name="featured" type="checkbox" checked={form.featured} onChange={handleChange} className="w-5 h-5 accent-primary" />
