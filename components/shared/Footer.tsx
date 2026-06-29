@@ -1,40 +1,49 @@
+'use client'
+
 import Link from 'next/link'
+import { Instagram, Facebook, Phone, Mail, MapPin } from 'lucide-react'
 
 export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-[#0a0805] border-t border-[#2a2218]/30">
-      <div className="max-w-[1440px] mx-auto px-6 py-20">
+    <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }} className="mt-20">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
           <div>
-            <h3 className="font-[Cormorant_Garamond] italic text-2xl tracking-[0.15em] text-[#f0ead8]">
-              amine.parfume
+            <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--gold-400)' }} className="text-2xl mb-3">
+              Amine Parfumes
             </h3>
-            <p className="mt-3 text-sm text-[#8a7d65] leading-relaxed max-w-xs">
-              L&apos;art du parfum, soigneusement sélectionné pour les connaisseurs les plus exigeants.
+            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }} className="text-sm leading-relaxed max-w-xs">
+              Des fragrances d&apos;exception, livrées chez vous.
             </p>
+            <div className="flex items-center gap-4 mt-6">
+              <a href="#" style={{ color: 'var(--fg-subtle)' }} className="hover:text-[var(--gold-400)] transition-colors">
+                <Instagram size={18} />
+              </a>
+              <a href="#" style={{ color: 'var(--fg-subtle)' }} className="hover:text-[var(--gold-400)] transition-colors">
+                <Facebook size={18} />
+              </a>
+            </div>
           </div>
 
-          {/* Navigation */}
+          {/* Links */}
           <div>
-            <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8a7d65] mb-4">
-              Navigation
+            <h4 style={{ fontFamily: 'var(--font-body)', color: 'var(--gold-600)' }} className="text-xs tracking-[0.2em] uppercase mb-5">
+              Liens utiles
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {[
                 { href: '/', label: 'Accueil' },
-                { href: '/boutique', label: 'Boutique' },
-                { href: '/boutique?type=decant', label: 'Décants' },
+                { href: '/boutique', label: 'Catalogue' },
+                { href: '/boutique?type=homme', label: 'Homme' },
+                { href: '/boutique?type=femme', label: 'Femme' },
                 { href: '/panier', label: 'Panier' },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-[#8a7d65] hover:text-[#f0ead8] transition-colors"
-                  >
-                    {link.label}
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }} className="text-sm hover:text-[var(--gold-400)] transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
@@ -42,28 +51,42 @@ export function Footer() {
           </div>
 
           {/* Contact */}
-          <div>
-            <h4 className="text-[10px] tracking-[0.25em] uppercase text-[#8a7d65] mb-4">
+          <div id="contact">
+            <h4 style={{ fontFamily: 'var(--font-body)', color: 'var(--gold-600)' }} className="text-xs tracking-[0.2em] uppercase mb-5">
               Contact
             </h4>
-            <ul className="space-y-2 text-sm text-[#8a7d65]">
-              <li>Maroc</li>
-              <li>contact@amine-parfume.com</li>
-              <li>+212 6 00 00 00 00</li>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
+                <Phone size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">+212 6XX XXX XXX</span>
+              </li>
+              <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
+                <Mail size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">contact@amineparfumes.ma</span>
+              </li>
+              <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
+                <MapPin size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">Agadir, Maroc</span>
+              </li>
             </ul>
+            <div className="mt-5 flex items-center gap-2" style={{ color: 'var(--gold-700)' }}>
+              <span className="text-lg">💳</span>
+              <span style={{ fontFamily: 'var(--font-body)' }} className="text-xs tracking-wider uppercase">
+                Paiement à la livraison
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-16 pt-8 border-t border-[#2a2218]/30 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[11px] text-[#8a7d65] tracking-wider">
-            © {year} amine.parfume. Tous droits réservés.
+        {/* Bottom */}
+        <div className="divider-gold mt-12 mb-6" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-subtle)' }} className="text-xs">
+            © {year} Amine Parfumes – Tous droits réservés
           </p>
-          <div className="flex items-center gap-6">
-            <span className="text-[11px] text-[#8a7d65] tracking-wider">
-              Paiement à la livraison
-            </span>
-          </div>
+          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gold-700)' }} className="text-xs">
+            Créations d&apos;Exception
+          </p>
         </div>
       </div>
     </footer>

@@ -2,8 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/shared/Navbar'
 import { Footer } from '@/components/shared/Footer'
 import { Hero } from '@/components/perfume/Hero'
+import { Marquee } from '@/components/perfume/Marquee'
+import { Showcase } from '@/components/perfume/Showcase'
 import { FeaturedProducts } from '@/components/perfume/FeaturedProducts'
-import { BrandStory } from '@/components/perfume/BrandStory'
+import { WhyUs } from '@/components/perfume/WhyUs'
 
 export default async function HomePage() {
   const supabase = createClient()
@@ -14,7 +16,7 @@ export default async function HomePage() {
     .eq('featured', true)
     .eq('in_stock', true)
     .order('created_at', { ascending: false })
-    .limit(6)
+    .limit(8)
 
   const products = (featured ?? []).map((p) => ({
     id: p.id,
@@ -34,10 +36,12 @@ export default async function HomePage() {
   return (
     <>
       <Navbar />
-      <main className="pt-16">
+      <main>
         <Hero />
+        <Marquee />
+        <Showcase />
         <FeaturedProducts products={products} />
-        <BrandStory />
+        <WhyUs />
       </main>
       <Footer />
     </>

@@ -19,7 +19,7 @@ export default async function LocaleLayout({
   const dir = locale === 'ar' ? 'rtl' : 'ltr'
 
   return (
-    <div dir={dir} className="min-h-screen bg-background text-on-surface font-body antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+    <div dir={dir} className="min-h-screen overflow-x-hidden">
       <NextIntlClientProvider messages={messages}>
         {children}
       </NextIntlClientProvider>

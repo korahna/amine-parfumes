@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { ShoppingBag } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
 
@@ -29,65 +28,50 @@ export function ProductCard({ id, slug, name, brand, type, price, image, scentNo
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.6 }}
-      className="group relative cursor-pointer"
-    >
+    <div className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
       <Link href={`/produit/${slug}`}>
-        {/* Image — no border, no container, sits directly on bg */}
-        <div className="relative aspect-square overflow-hidden bg-[#13100c]">
+        {/* Image */}
+        <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
           <Image
             src={image}
             alt={name}
             fill
-            className="object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
-            sizes="(max-width: 640px) 50vw, 33vw"
+            className="object-cover"
+            sizes="(max-width:768px) 50vw, 25vw"
           />
-          {/* Hover ring */}
-          <div className="absolute inset-0 ring-0 group-hover:ring-1 ring-[#c9a84c]/30 transition-all duration-500 pointer-events-none" />
-        </div>
 
-        {/* Info — centered, no card container */}
-        <div className="mt-4 text-center">
-          <p className="text-[10px] tracking-[0.25em] uppercase text-[#8a7d65]">
-            {brand} · {type === 'decant' ? 'Échantillon' : 'Flacon'}
-          </p>
-          <h3 className="mt-1 text-lg font-[Cormorant_Garamond] font-normal text-[#f0ead8] group-hover:text-[#c9a84c] transition-colors">
-            {name}
-          </h3>
-
-          {/* Scent pills */}
-          {scentNotes.length > 0 && (
-            <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
-              {scentNotes.map((note) => (
-                <span
-                  key={note}
-                  className="text-[10px] border border-[#2a2218] text-[#8a7d65] px-2 py-0.5 rounded-full"
-                >
-                  {note}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Price + CTA */}
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-xl text-[#c9a84c] font-medium font-[DM_Sans]">
-              {price.toLocaleString('fr-MA')} MAD
-            </span>
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-1.5 border border-[#c9a84c] text-[#c9a84c] hover:bg-[#c9a84c]/10 transition-colors px-4 py-1.5 text-[10px] tracking-[0.15em] uppercase"
-            >
-              <ShoppingBag className="w-3 h-3" />
-              Panier
+          {/* Hover overlay with CTA */}
+          <div className="overlay">
+            <button onClick={handleAddToCart}
+              className="btn-gold-filled flex items-center gap-2"
+              style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem' }}>
+              <ShoppingBag size={12} />
+              Ajouter au panier
             </button>
           </div>
         </div>
+
+        {/* Info */}
+        <div style={{ padding: '0.9rem 0.85rem 0.75rem' }}>
+          {brand && (
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', color: 'var(--gold-dark)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+              {brand}
+            </p>
+          )}
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.2s' }}
+            className="group-hover:text-[var(--gold-mid)]">
+            {name}
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--gold-mid)', fontSize: '0.9rem' }}>
+              {price.toFixed(2)} MAD
+            </span>
+          </div>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.65rem', color: 'var(--fg-subtle)', marginTop: '0.25rem' }}>
+            {type === 'decant' ? 'Échantillon' : 'Flacon complet'}
+          </p>
+        </div>
       </Link>
-    </motion.div>
+    </div>
   )
 }
