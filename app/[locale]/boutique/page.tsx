@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, X, Search } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +19,12 @@ interface Product {
   images: string[]
   scent_notes: { top: string[]; heart: string[]; base: string[] }
   category: string | null
+}
+
+const PAGE_TITLES: Record<string, string> = {
+  homme: 'Parfums pour Homme',
+  femme: 'Parfums pour Femme',
+  decant: 'Échantillons & Décants',
 }
 
 const categories = [
@@ -36,14 +43,26 @@ const scentFamilies = [
 ]
 
 export default function BoutiquePage() {
+  const searchParams = useSearchParams()
+  const urlType = searchParams.get('type') || ''
+
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState(urlType === 'homme' ? 'Pour Lui' : urlType === 'femme' ? 'Pour Elle' : '')
+  const [filterType, setFilterType] = useState<'full' | 'decant' | ''>(urlType === 'decant' ? 'decant' : '')
   const [scentFamily, setScentFamily] = useState('')
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+
+  // Sync URL params on mount
+  useEffect(() => {
+    if (urlType === 'homme') setCategory('Pour Lui')
+    else if (urlType === 'femme') setCategory('Pour Elle')
+    else if (urlType === 'decant') { setFilterType('decant'); setCategory('') }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -63,6 +82,8 @@ export default function BoutiquePage() {
     const q = search.toLowerCase().trim()
     return products.filter((p) => {
       if (category && p.category !== category) return false
+      if (filterType === 'decant' && p.type !== 'decant') return false
+      if (filterType === 'full' && p.type !== 'full') return false
       if (scentFamily) {
         const allNotes = [
           ...(p.scent_notes?.top ?? []),
@@ -74,9 +95,11 @@ export default function BoutiquePage() {
       if (q && !p.name_fr.toLowerCase().includes(q) && !(p.brand || '').toLowerCase().includes(q)) return false
       return true
     })
-  }, [products, category, scentFamily, search])
+  }, [products, category, filterType, scentFamily, search])
 
-  const hasFilters = category || scentFamily || search
+  const hasFilters = category || scentFamily || search || filterType
+
+  const pageTitle = PAGE_TITLES[urlType] || 'Catalogue'
 
   const label: React.CSSProperties = {
     fontFamily: 'var(--font-body)', fontSize: '0.58rem',
@@ -103,7 +126,7 @@ export default function BoutiquePage() {
           </p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.9rem,5vw,3rem)', color: 'var(--fg-primary)', lineHeight: 1 }}>
-              Catalogue
+              {pageTitle}
             </h1>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--fg-subtle)' }}>
               {filtered.length} produit{filtered.length > 1 ? 's' : ''}
@@ -139,9 +162,15 @@ export default function BoutiquePage() {
               <button onClick={() => setCategory('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold-400)', display: 'flex', padding: 0 }}><X size={10} /></button>
             </span>
           )}
+          {filterType === 'decant' && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 100, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: '#a78bfa' }}>
+              Échantillons
+              <button onClick={() => setFilterType('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a78bfa', display: 'flex', padding: 0 }}><X size={10} /></button>
+            </span>
+          )}
 
           {hasFilters && (
-            <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
+            <button onClick={() => { setCategory(''); setScentFamily(''); setSearch(''); setFilterType('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 10px', border: '1px solid rgba(239,68,68,0.28)', borderRadius: 100, background: 'rgba(239,68,68,0.06)', color: '#f87171', fontFamily: 'var(--font-body)', fontSize: '0.68rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
               <X size={10} />
               Tout effacer
@@ -192,7 +221,7 @@ export default function BoutiquePage() {
                   Aucun produit trouvé
                 </p>
                 {hasFilters && (
-                  <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
+                  <button onClick={() => { setCategory(''); setScentFamily(''); setSearch(''); setFilterType('') }}
                     style={{ marginTop: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.73rem', color: 'var(--gold-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                     Effacer les filtres
                   </button>
