@@ -3,19 +3,15 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Menu, X, Sun, Moon } from 'lucide-react'
+import { ShoppingBag, Menu, X } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
-import { useThemeStore } from '@/lib/theme'
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const cartCount = useCartStore((s) => s.totalItems())
-  const { theme, toggle } = useThemeStore()
 
   useEffect(() => {
-    setMounted(true)
     const fn = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
@@ -30,9 +26,7 @@ export function Navbar() {
   ]
 
   const navBg = scrolled
-    ? theme === 'light'
-      ? { background: '#faf8f4', borderColor: 'rgba(133,97,24,0.15)' }
-      : { background: '#080b14', borderColor: 'rgba(201,162,39,0.18)' }
+    ? { background: '#080b14', borderColor: 'rgba(201,162,39,0.18)' }
     : { background: 'transparent', borderColor: 'transparent' }
 
   return (
@@ -74,15 +68,6 @@ export function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-3 ml-auto">
-            {/* Theme toggle */}
-            {mounted && (
-              <button onClick={toggle} aria-label="Toggle theme"
-                style={{ color: 'var(--fg-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', transition: 'color 0.15s' }}
-                className="hover:text-[var(--gold-400)]">
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-            )}
-
             <Link href="/panier" className="relative" style={{ color: 'var(--fg-muted)', display: 'flex', transition: 'color 0.15s' }} aria-label="Panier">
               <ShoppingBag size={18} className="hover:text-[var(--gold-400)]" />
               {cartCount > 0 && (

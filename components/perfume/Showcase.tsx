@@ -24,7 +24,7 @@ export function Showcase() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {list.map((p, i) => (
             <Link key={i} href={p.href} className="group"
-              style={{ textDecoration: 'none', display: 'block', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-gold)', background: 'var(--bg-surface)', transition: 'transform 0.35s ease, box-shadow 0.35s ease' }}
+              style={{ textDecoration: 'none', display: 'block', borderRadius: 'var(--r-lg)', overflow: 'hidden', border: '1px solid var(--border-gold)', background: 'var(--bg-surface)', transition: 'transform 0.35s ease, box-shadow 0.35s ease' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)'; (e.currentTarget as HTMLElement).style.boxShadow = `0 16px 40px ${p.accent}25` }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}>
               <div style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden' }}>

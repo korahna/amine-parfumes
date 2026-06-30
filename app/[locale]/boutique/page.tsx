@@ -223,7 +223,7 @@ function BoutiqueContent() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(182px, 1fr))', gap: '0.9rem' }}>
                 {filtered.map((product) => (
-                  <div key={product.id} className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
+                  <div key={product.id} className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
                     <Link href={`/produit/${product.slug}`}>
                       <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
                         <Image src={product.images?.[0] ?? '/images/placeholder.jpg'} alt={product.name_fr} fill className="object-cover" sizes="(max-width:768px) 50vw, 25vw" />
