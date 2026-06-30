@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -42,27 +42,19 @@ const scentFamilies = [
   { value: 'frais', fr: 'Frais', ar: 'منعش' },
 ]
 
-export default function BoutiquePage() {
+function BoutiqueContent() {
   const searchParams = useSearchParams()
   const urlType = searchParams.get('type') || ''
+  const isFiltered = !!urlType
 
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState(urlType === 'homme' ? 'Pour Lui' : urlType === 'femme' ? 'Pour Elle' : '')
-  const [filterType, setFilterType] = useState<'full' | 'decant' | ''>(urlType === 'decant' ? 'decant' : '')
+  const [category, setCategory] = useState('')
   const [scentFamily, setScentFamily] = useState('')
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
-
-  // Sync URL params on mount
-  useEffect(() => {
-    if (urlType === 'homme') setCategory('Pour Lui')
-    else if (urlType === 'femme') setCategory('Pour Elle')
-    else if (urlType === 'decant') { setFilterType('decant'); setCategory('') }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -81,9 +73,12 @@ export default function BoutiquePage() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return products.filter((p) => {
-      if (category && p.category !== category) return false
-      if (filterType === 'decant' && p.type !== 'decant') return false
-      if (filterType === 'full' && p.type !== 'full') return false
+      // URL-based filters
+      if (urlType === 'homme' && p.category !== 'Pour Lui') return false
+      if (urlType === 'femme' && p.category !== 'Pour Elle') return false
+      if (urlType === 'decant' && p.type !== 'decant') return false
+      // Sidebar filters (only when not URL-filtered)
+      if (!isFiltered && category && p.category !== category) return false
       if (scentFamily) {
         const allNotes = [
           ...(p.scent_notes?.top ?? []),
@@ -95,10 +90,9 @@ export default function BoutiquePage() {
       if (q && !p.name_fr.toLowerCase().includes(q) && !(p.brand || '').toLowerCase().includes(q)) return false
       return true
     })
-  }, [products, category, filterType, scentFamily, search])
+  }, [products, urlType, isFiltered, category, scentFamily, search])
 
-  const hasFilters = category || scentFamily || search || filterType
-
+  const hasFilters = category || scentFamily || search
   const pageTitle = PAGE_TITLES[urlType] || 'Catalogue'
 
   const label: React.CSSProperties = {
@@ -136,11 +130,14 @@ export default function BoutiquePage() {
 
         {/* Top bar */}
         <div style={{ display: 'flex', gap: '0.65rem', marginBottom: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => setShowFilters(!showFilters)} className="lg:hidden"
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0.45rem 0.8rem', border: '1px solid var(--border)', borderRadius: 4, background: showFilters ? 'rgba(201,162,39,0.08)' : 'transparent', color: 'var(--fg-muted)', fontFamily: 'var(--font-body)', fontSize: '0.73rem', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <SlidersHorizontal size={13} />
-            Filtres
-          </button>
+          {/* Show filters button only on Catalogue (not filtered pages) */}
+          {!isFiltered && (
+            <button onClick={() => setShowFilters(!showFilters)} className="lg:hidden"
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0.45rem 0.8rem', border: '1px solid var(--border)', borderRadius: 4, background: showFilters ? 'rgba(201,162,39,0.08)' : 'transparent', color: 'var(--fg-muted)', fontFamily: 'var(--font-body)', fontSize: '0.73rem', cursor: 'pointer', transition: 'all 0.15s' }}>
+              <SlidersHorizontal size={13} />
+              Filtres
+            </button>
+          )}
 
           <div style={{ flex: 1, position: 'relative', maxWidth: 300 }}>
             <Search size={12} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-subtle)', pointerEvents: 'none' }} />
@@ -156,21 +153,15 @@ export default function BoutiquePage() {
             )}
           </div>
 
-          {category && (
+          {category && !isFiltered && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 100, background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.25)', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: 'var(--gold-400)' }}>
               {category}
               <button onClick={() => setCategory('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold-400)', display: 'flex', padding: 0 }}><X size={10} /></button>
             </span>
           )}
-          {filterType === 'decant' && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 100, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: '#a78bfa' }}>
-              Échantillons
-              <button onClick={() => setFilterType('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a78bfa', display: 'flex', padding: 0 }}><X size={10} /></button>
-            </span>
-          )}
 
           {hasFilters && (
-            <button onClick={() => { setCategory(''); setScentFamily(''); setSearch(''); setFilterType('') }}
+            <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
               style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 10px', border: '1px solid rgba(239,68,68,0.28)', borderRadius: 100, background: 'rgba(239,68,68,0.06)', color: '#f87171', fontFamily: 'var(--font-body)', fontSize: '0.68rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
               <X size={10} />
               Tout effacer
@@ -179,32 +170,34 @@ export default function BoutiquePage() {
         </div>
 
         <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
-          {/* Sidebar */}
-          <aside className={`${showFilters ? 'flex' : 'hidden'} lg:flex`}
-            style={{ flexDirection: 'column', gap: '1.25rem', width: 188, flexShrink: 0 }}>
-            <div>
-              <span style={label}>Catégories</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {categories.map((c) => (
-                  <button key={c.value} style={btn(category === c.value)}
-                    onClick={() => setCategory(category === c.value ? '' : c.value)}>
-                    {c.fr}
-                  </button>
-                ))}
+          {/* Sidebar — only on Catalogue page */}
+          {!isFiltered && (
+            <aside className={`${showFilters ? 'flex' : 'hidden'} lg:flex`}
+              style={{ flexDirection: 'column', gap: '1.25rem', width: 188, flexShrink: 0 }}>
+              <div>
+                <span style={label}>Catégories</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {categories.map((c) => (
+                    <button key={c.value} style={btn(category === c.value)}
+                      onClick={() => setCategory(category === c.value ? '' : c.value)}>
+                      {c.fr}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <span style={label}>Famille Olfactive</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {scentFamilies.map((f) => (
-                  <button key={f.value} style={btn(scentFamily === f.value)}
-                    onClick={() => setScentFamily(scentFamily === f.value ? '' : f.value)}>
-                    {f.fr}
-                  </button>
-                ))}
+              <div>
+                <span style={label}>Famille Olfactive</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {scentFamilies.map((f) => (
+                    <button key={f.value} style={btn(scentFamily === f.value)}
+                      onClick={() => setScentFamily(scentFamily === f.value ? '' : f.value)}>
+                      {f.fr}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </aside>
+            </aside>
+          )}
 
           {/* Grid */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -221,7 +214,7 @@ export default function BoutiquePage() {
                   Aucun produit trouvé
                 </p>
                 {hasFilters && (
-                  <button onClick={() => { setCategory(''); setScentFamily(''); setSearch(''); setFilterType('') }}
+                  <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
                     style={{ marginTop: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.73rem', color: 'var(--gold-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                     Effacer les filtres
                   </button>
@@ -229,34 +222,39 @@ export default function BoutiquePage() {
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(182px, 1fr))', gap: '0.9rem' }}>
-                {filtered.map((product) => {
-                  const allNotes = [...(product.scent_notes?.top ?? []), ...(product.scent_notes?.heart ?? []), ...(product.scent_notes?.base ?? [])].slice(0, 3)
-                  return (
-                    <div key={product.id} className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
-                      <Link href={`/produit/${product.slug}`}>
-                        <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
-                          <Image src={product.images?.[0] ?? '/images/placeholder.jpg'} alt={product.name_fr} fill className="object-cover" sizes="(max-width:768px) 50vw, 25vw" />
-                          <div className="overlay">
-                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); addItem({ productId: product.id, name: product.name_fr, brand: product.brand, price: Number(product.price), image: product.images?.[0] ?? '/images/placeholder.jpg', type: product.type }); openCart() }}
-                              className="btn-gold-filled" style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem' }}>
-                              Ajouter au panier
-                            </button>
-                          </div>
+                {filtered.map((product) => (
+                  <div key={product.id} className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
+                    <Link href={`/produit/${product.slug}`}>
+                      <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
+                        <Image src={product.images?.[0] ?? '/images/placeholder.jpg'} alt={product.name_fr} fill className="object-cover" sizes="(max-width:768px) 50vw, 25vw" />
+                        <div className="overlay">
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); addItem({ productId: product.id, name: product.name_fr, brand: product.brand, price: Number(product.price), image: product.images?.[0] ?? '/images/placeholder.jpg', type: product.type }); openCart() }}
+                            className="btn-gold-filled" style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem' }}>
+                            Ajouter au panier
+                          </button>
                         </div>
-                        <div style={{ padding: '0.9rem 0.85rem 0.75rem' }}>
-                          {product.brand && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', color: 'var(--gold-dark)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{product.brand}</p>}
-                          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.2s' }} className="group-hover:text-[var(--gold-mid)]">{product.name_fr}</h3>
-                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--gold-mid)', fontSize: '0.9rem' }}>{Number(product.price).toFixed(2)} MAD</span>
-                        </div>
-                      </Link>
-                    </div>
-                  )
-                })}
+                      </div>
+                      <div style={{ padding: '0.9rem 0.85rem 0.75rem' }}>
+                        {product.brand && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', color: 'var(--gold-dark)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{product.brand}</p>}
+                        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.2s' }} className="group-hover:text-[var(--gold-mid)]">{product.name_fr}</h3>
+                        <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--gold-mid)', fontSize: '0.9rem' }}>{Number(product.price).toFixed(2)} MAD</span>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BoutiquePage() {
+  return (
+    <Suspense>
+      <BoutiqueContent />
+    </Suspense>
   )
 }
