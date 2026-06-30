@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useFilterStore, useCartStore } from '@/lib/store'
+import { SlidersHorizontal, X, Search } from 'lucide-react'
+import { useCartStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
-import { SkeletonGrid } from '@/components/perfume/SkeletonCard'
 
 interface Product {
   id: string
@@ -20,15 +20,30 @@ interface Product {
   category: string | null
 }
 
-const categories = ['Tous', 'Pour Elle', 'Pour Lui', 'Unisexe']
-const scentFamilies = ['Tous', 'Floral', 'Boisé', 'Oriental', 'Frais', 'Citronné']
+const categories = [
+  { value: '', fr: 'Tous', ar: 'الكل' },
+  { value: 'Pour Elle', fr: 'Pour Elle', ar: 'نسائي' },
+  { value: 'Pour Lui', fr: 'Pour Lui', ar: 'رجالي' },
+  { value: 'Unisexe', fr: 'Unisexe', ar: 'مختلط' },
+]
+
+const scentFamilies = [
+  { value: '', fr: 'Toutes', ar: 'الكل' },
+  { value: 'floral', fr: 'Floral', ar: 'زهري' },
+  { value: 'boisé', fr: 'Boisé', ar: 'خشبي' },
+  { value: 'oriental', fr: 'Oriental', ar: 'شرقي' },
+  { value: 'frais', fr: 'Frais', ar: 'منعش' },
+]
 
 export default function BoutiquePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const { category, scentFamily, type, setCategory, setScentFamily, setType, resetFilters } = useFilterStore()
-  const openCart = useCartStore((s) => s.openCart)
+  const [category, setCategory] = useState('')
+  const [scentFamily, setScentFamily] = useState('')
+  const [search, setSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const addItem = useCartStore((s) => s.addItem)
+  const openCart = useCartStore((s) => s.openCart)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -38,196 +53,181 @@ export default function BoutiquePage() {
         .select('*')
         .eq('in_stock', true)
         .order('created_at', { ascending: false })
-
       setProducts(data ?? [])
       setLoading(false)
     }
     fetchProducts()
   }, [])
 
-  const filtered = products.filter((p) => {
-    if (category && category !== 'Tous' && p.category !== category) return false
-    if (scentFamily && scentFamily !== 'Tous') {
-      const allNotes = [
-        ...(p.scent_notes?.top ?? []),
-        ...(p.scent_notes?.heart ?? []),
-        ...(p.scent_notes?.base ?? []),
-      ].map((n) => n.toLowerCase())
-      if (!allNotes.some((n) => n.includes(scentFamily.toLowerCase()))) return false
-    }
-    if (type && p.type !== type) return false
-    return true
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    return products.filter((p) => {
+      if (category && p.category !== category) return false
+      if (scentFamily) {
+        const allNotes = [
+          ...(p.scent_notes?.top ?? []),
+          ...(p.scent_notes?.heart ?? []),
+          ...(p.scent_notes?.base ?? []),
+        ].map((n) => n.toLowerCase())
+        if (!allNotes.some((n) => n.includes(scentFamily))) return false
+      }
+      if (q && !p.name_fr.toLowerCase().includes(q) && !(p.brand || '').toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [products, category, scentFamily, search])
+
+  const hasFilters = category || scentFamily || search
+
+  const label: React.CSSProperties = {
+    fontFamily: 'var(--font-body)', fontSize: '0.58rem',
+    letterSpacing: '0.22em', textTransform: 'uppercase',
+    color: 'var(--gold-400)', marginBottom: '0.5rem', display: 'block',
+  }
+  const btn = (active: boolean): React.CSSProperties => ({
+    fontFamily: 'var(--font-body)', fontSize: '0.78rem',
+    color: active ? 'var(--gold-400)' : 'var(--fg-muted)',
+    background: active ? 'rgba(201,162,39,0.09)' : 'transparent',
+    border: active ? '1px solid rgba(201,162,39,0.28)' : '1px solid transparent',
+    borderRadius: 4, padding: '0.3rem 0.65rem',
+    cursor: 'pointer', width: '100%', textAlign: 'left',
+    transition: 'all 0.1s ease',
   })
 
   return (
-    <>
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl transition-all duration-500 hover:opacity-70">
-        <div className="flex justify-between items-center px-gutter py-4 w-full max-w-container-max mx-auto">
-          <button aria-label="Language" className="text-on-surface-variant hover:text-primary transition-colors duration-300">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>language</span>
-          </button>
-          <Link href="/" className="font-display-lg text-display-lg-mobile md:text-display-lg italic text-on-surface dark:text-on-surface text-center">
+    <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+        {/* Header */}
+        <div style={{ marginBottom: '1.75rem' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.28em', color: 'var(--gold-400)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
             amine.parfume
-          </Link>
-          <button aria-label="Shopping Bag" onClick={openCart} className="text-on-surface-variant hover:text-primary transition-colors duration-300 relative">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>shopping_bag</span>
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-grow pt-32 pb-section-padding px-gutter max-w-container-max mx-auto w-full">
-        {/* Page Header */}
-        <div className="mb-stack-lg text-center md:text-left flex flex-col md:flex-row md:justify-between md:items-end gap-stack-md">
-          <div>
-            <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary uppercase tracking-widest">BOUTIQUE</h1>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-stack-sm max-w-md">
-              Découvrez notre collection de fragrances exclusives, élaborées avec les essences les plus rares.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.9rem,5vw,3rem)', color: 'var(--fg-primary)', lineHeight: 1 }}>
+              Catalogue
+            </h1>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--fg-subtle)' }}>
+              {filtered.length} produit{filtered.length > 1 ? 's' : ''}
             </p>
           </div>
-          {/* Filters */}
-          <div className="flex flex-wrap justify-center md:justify-end gap-stack-sm font-label-caps text-label-caps">
-            <select
-              value={category ?? 'Tous'}
-              onChange={(e) => setCategory(e.target.value === 'Tous' ? null : e.target.value)}
-              className="px-6 py-3 border border-on-surface-variant/30 hover:border-primary text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase bg-transparent cursor-pointer"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>{c === 'Tous' ? 'Catégorie' : c}</option>
-              ))}
-            </select>
-            <select
-              value={scentFamily ?? 'Tous'}
-              onChange={(e) => setScentFamily(e.target.value === 'Tous' ? null : e.target.value)}
-              className="px-6 py-3 border border-on-surface-variant/30 hover:border-primary text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase bg-transparent cursor-pointer"
-            >
-              {scentFamilies.map((f) => (
-                <option key={f} value={f}>{f === 'Tous' ? 'Famille Olfactive' : f}</option>
-              ))}
-            </select>
-            {(category || scentFamily || type) && (
-              <button
-                onClick={resetFilters}
-                className="px-6 py-3 text-primary hover:text-primary-fixed transition-colors duration-300 uppercase tracking-widest"
-              >
-                Réinitialiser
+        </div>
+
+        {/* Top bar */}
+        <div style={{ display: 'flex', gap: '0.65rem', marginBottom: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => setShowFilters(!showFilters)} className="lg:hidden"
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0.45rem 0.8rem', border: '1px solid var(--border)', borderRadius: 4, background: showFilters ? 'rgba(201,162,39,0.08)' : 'transparent', color: 'var(--fg-muted)', fontFamily: 'var(--font-body)', fontSize: '0.73rem', cursor: 'pointer', transition: 'all 0.15s' }}>
+            <SlidersHorizontal size={13} />
+            Filtres
+          </button>
+
+          <div style={{ flex: 1, position: 'relative', maxWidth: 300 }}>
+            <Search size={12} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--fg-subtle)', pointerEvents: 'none' }} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              className="input-luxury"
+              style={{ paddingLeft: '1.9rem', fontSize: '0.78rem', height: 36 }} />
+            {search && (
+              <button onClick={() => setSearch('')}
+                style={{ position: 'absolute', right: 7, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-subtle)', display: 'flex', padding: 2 }}>
+                <X size={12} />
               </button>
             )}
           </div>
+
+          {category && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 100, background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.25)', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: 'var(--gold-400)' }}>
+              {category}
+              <button onClick={() => setCategory('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold-400)', display: 'flex', padding: 0 }}><X size={10} /></button>
+            </span>
+          )}
+
+          {hasFilters && (
+            <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 10px', border: '1px solid rgba(239,68,68,0.28)', borderRadius: 100, background: 'rgba(239,68,68,0.06)', color: '#f87171', fontFamily: 'var(--font-body)', fontSize: '0.68rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <X size={10} />
+              Tout effacer
+            </button>
+          )}
         </div>
 
-        {/* Product Grid */}
-        {loading ? (
-          <SkeletonGrid count={6} />
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="font-display-lg text-display-lg-mobile italic text-on-surface-variant">
-              Aucun parfum ne correspond à votre recherche...
-            </p>
-            <button
-              onClick={resetFilters}
-              className="mt-8 font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity duration-300 uppercase tracking-[0.2em]"
-            >
-              Voir tous les parfums
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-gutter gap-y-stack-lg">
-            {filtered.map((product) => {
-              const allNotes = [
-                ...(product.scent_notes?.top ?? []),
-                ...(product.scent_notes?.heart ?? []),
-                ...(product.scent_notes?.base ?? []),
-              ].slice(0, 3)
+        <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
+          {/* Sidebar */}
+          <aside className={`${showFilters ? 'flex' : 'hidden'} lg:flex`}
+            style={{ flexDirection: 'column', gap: '1.25rem', width: 188, flexShrink: 0 }}>
+            <div>
+              <span style={label}>Catégories</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {categories.map((c) => (
+                  <button key={c.value} style={btn(category === c.value)}
+                    onClick={() => setCategory(category === c.value ? '' : c.value)}>
+                    {c.fr}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span style={label}>Famille Olfactive</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {scentFamilies.map((f) => (
+                  <button key={f.value} style={btn(scentFamily === f.value)}
+                    onClick={() => setScentFamily(scentFamily === f.value ? '' : f.value)}>
+                    {f.fr}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
 
-              return (
-                <article key={product.id} className="group flex flex-col relative">
-                  <Link href={`/produit/${product.slug}`}>
-                    <div className="relative w-full aspect-square mb-stack-md overflow-hidden bg-surface-container-low transition-all duration-700">
-                      <Image
-                        src={product.images?.[0] ?? '/images/placeholder.jpg'}
-                        alt={product.name_fr}
-                        fill
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-1000 ease-in-out opacity-90 group-hover:opacity-100 mix-blend-luminosity hover:mix-blend-normal"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center pb-stack-md">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            addItem({
-                              productId: product.id,
-                              name: product.name_fr,
-                              brand: product.brand,
-                              price: Number(product.price),
-                              image: product.images?.[0] ?? '/images/placeholder.jpg',
-                              type: product.type,
-                            })
-                          }}
-                          className="font-label-caps text-label-caps bg-primary-container text-on-primary-container px-8 py-3 hover:bg-primary transition-colors duration-300 w-[80%] uppercase tracking-widest"
-                        >
-                          AJOUTER
-                        </button>
-                      </div>
+          {/* Grid */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {loading ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(182px, 1fr))', gap: '0.9rem' }}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="glass-card" style={{ height: 320, animation: 'shimmer 2s ease-in-out infinite', background: 'linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-raised) 50%, var(--bg-surface) 75%)', backgroundSize: '200% 100%' }} />
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+                <span style={{ fontSize: 36, display: 'block', marginBottom: '1rem', opacity: 0.25 }}>🌸</span>
+                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-subtle)', fontSize: '0.88rem' }}>
+                  Aucun produit trouvé
+                </p>
+                {hasFilters && (
+                  <button onClick={() => { setCategory(''); setScentFamily(''); setSearch('') }}
+                    style={{ marginTop: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.73rem', color: 'var(--gold-400)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                    Effacer les filtres
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(182px, 1fr))', gap: '0.9rem' }}>
+                {filtered.map((product) => {
+                  const allNotes = [...(product.scent_notes?.top ?? []), ...(product.scent_notes?.heart ?? []), ...(product.scent_notes?.base ?? [])].slice(0, 3)
+                  return (
+                    <div key={product.id} className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
+                      <Link href={`/produit/${product.slug}`}>
+                        <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
+                          <Image src={product.images?.[0] ?? '/images/placeholder.jpg'} alt={product.name_fr} fill className="object-cover" sizes="(max-width:768px) 50vw, 25vw" />
+                          <div className="overlay">
+                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); addItem({ productId: product.id, name: product.name_fr, brand: product.brand, price: Number(product.price), image: product.images?.[0] ?? '/images/placeholder.jpg', type: product.type }); openCart() }}
+                              className="btn-gold-filled" style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem' }}>
+                              Ajouter au panier
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ padding: '0.9rem 0.85rem 0.75rem' }}>
+                          {product.brand && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', color: 'var(--gold-dark)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{product.brand}</p>}
+                          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.2s' }} className="group-hover:text-[var(--gold-mid)]">{product.name_fr}</h3>
+                          <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--gold-mid)', fontSize: '0.9rem' }}>{Number(product.price).toFixed(2)} MAD</span>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                  <div className="flex flex-col items-center text-center">
-                    <span className="font-label-caps text-label-caps text-on-surface-variant mb-2 tracking-[0.3em]">{product.brand.toUpperCase()}</span>
-                    <Link href={`/produit/${product.slug}`}>
-                      <h2 className="font-display-lg text-headline-md md:text-headline-md text-on-surface mb-2 leading-tight hover:text-primary transition-colors duration-300">{product.name_fr}</h2>
-                    </Link>
-                    {allNotes.length > 0 && (
-                      <div className="flex flex-wrap items-center justify-center gap-1.5 mb-2">
-                        {allNotes.map((note) => (
-                          <span key={note} className="text-[10px] border border-on-surface-variant/30 text-on-surface-variant px-2 py-0.5 rounded-full">
-                            {note}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <span className="font-body-md text-body-md text-primary">{Number(product.price).toLocaleString('fr-MA')} MAD</span>
-                  </div>
-                </article>
-              )
-            })}
+                  )
+                })}
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Load More */}
-        {!loading && filtered.length > 0 && (
-          <div className="mt-section-padding flex justify-center">
-            <button className="font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity duration-300 uppercase tracking-[0.2em]">
-              Voir Plus
-            </button>
-          </div>
-        )}
-      </main>
-
-      {/* BottomNavBar (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 w-full z-50 bg-surface-container/90 dark:bg-surface-container/90 backdrop-blur-md">
-        <div className="flex justify-around items-center py-4 px-2">
-          <Link href="/" className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-            <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 0", fontWeight: 300 }}>home</span>
-            <span className="font-label-caps text-label-caps">Home</span>
-          </Link>
-          <Link href="/boutique" className="flex flex-col items-center justify-center text-primary font-bold">
-            <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 1", fontWeight: 400 }}>storefront</span>
-            <span className="font-label-caps text-label-caps">Boutique</span>
-          </Link>
-          <button className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-            <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 0", fontWeight: 300 }}>search</span>
-            <span className="font-label-caps text-label-caps">Search</span>
-          </button>
-          <button className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-            <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: "'FILL' 0", fontWeight: 300 }}>person</span>
-            <span className="font-label-caps text-label-caps">Account</span>
-          </button>
         </div>
-      </nav>
-      {/* Padding for mobile nav */}
-      <div className="h-24 md:hidden" />
-    </>
+      </div>
+    </div>
   )
 }

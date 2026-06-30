@@ -1,134 +1,107 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
 
+const SHIPPING_COST = 30
+const FREE_ABOVE = 500
+
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCartStore()
+  const { items, removeItem, updateQuantity, totalPrice } = useCartStore()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) return null
+
+  const subtotal = totalPrice()
+  const shipping = subtotal >= FREE_ABOVE ? 0 : SHIPPING_COST
+  const grand = subtotal + shipping
 
   if (items.length === 0) {
     return (
-      <>
-        <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-          <div className="w-6 h-6" />
-          <Link href="/" className="font-display-lg text-display-lg-mobile italic text-on-surface">
-            amine.parfume
-          </Link>
-          <div className="w-6 h-6" />
-        </header>
-        <main className="flex-grow pt-24 pb-section-padding px-gutter max-w-container-max mx-auto w-full">
-          <div className="text-center py-24">
-            <span className="material-symbols-outlined text-on-surface-variant text-6xl mb-6 block">shopping_bag</span>
-            <p className="font-display-lg text-display-lg-mobile italic text-on-surface-variant mb-4">
-              Votre panier est vide
-            </p>
-            <Link href="/boutique" className="inline-block font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity duration-300 uppercase tracking-[0.2em]">
-              Découvrir la boutique
-            </Link>
-          </div>
-        </main>
-      </>
+      <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+        <div className="max-w-5xl mx-auto px-4 lg:px-8 py-10" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+          <ShoppingBag size={48} style={{ margin: '0 auto 1.5rem', color: 'var(--fg-subtle)', opacity: 0.3 }} />
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--fg-muted)', fontStyle: 'italic', marginBottom: '2rem' }}>Votre panier est vide</p>
+          <Link href="/boutique" className="btn-gold"><span>Continuer mes achats</span></Link>
+        </div>
+      </div>
     )
   }
 
   return (
-    <>
-      <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-        <div className="w-6 h-6" />
-        <Link href="/" className="font-display-lg text-display-lg-mobile italic text-on-surface">
-          amine.parfume
-        </Link>
-        <div className="w-6 h-6" />
-      </header>
+    <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 py-10">
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--fg-primary)', marginBottom: '2.5rem' }}>Mon Panier</h1>
 
-      <main className="flex-grow pt-24 pb-section-padding px-gutter max-w-container-max mx-auto w-full">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-12">
-            Panier <span className="text-on-surface-variant font-body-md">({totalItems()} articles)</span>
-          </h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
-            {/* Items */}
-            <div className="md:col-span-7 space-y-6">
-              {items.map((item) => (
-                <div key={`${item.productId}-${item.volume ?? ''}`} className="flex gap-4 p-4 bg-surface-container-low rounded-sm">
-                  <div className="w-24 h-24 relative flex-shrink-0 rounded-sm overflow-hidden bg-surface-container-high">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-grow flex flex-col justify-between">
-                    <div>
-                      <p className="font-label-caps text-label-caps text-on-surface-variant tracking-[0.2em]">{item.brand.toUpperCase()}</p>
-                      <h3 className="font-body-lg text-body-lg text-on-surface">{item.name}</h3>
-                      <p className="font-body-md text-body-md text-on-surface-variant">{item.type === 'decant' ? 'Échantillon' : 'Flacon'}{item.volume ? ` — ${item.volume} ML` : ''}</p>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1, item.volume)}
-                          className="w-8 h-8 border border-on-surface-variant/30 text-on-surface-variant hover:border-primary hover:text-primary transition-colors duration-300 flex items-center justify-center"
-                        >
-                          -
-                        </button>
-                        <span className="font-body-md text-body-md text-on-surface w-6 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1, item.volume)}
-                          className="w-8 h-8 border border-on-surface-variant/30 text-on-surface-variant hover:border-primary hover:text-primary transition-colors duration-300 flex items-center justify-center"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <p className="font-body-lg text-body-lg text-primary">{(item.price * item.quantity).toLocaleString('fr-MA')} MAD</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.productId, item.volume)}
-                    className="self-start text-on-surface-variant hover:text-primary transition-colors duration-300"
-                    aria-label="Supprimer"
-                  >
-                    <span className="material-symbols-outlined text-xl">close</span>
-                  </button>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Items */}
+          <div className="lg:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {items.map((item) => (
+              <div key={`${item.productId}-${item.volume ?? ''}`} className="glass-card" style={{ padding: '1rem', display: 'flex', gap: '1rem' }}>
+                <div style={{ width: 80, height: 96, position: 'relative', flexShrink: 0, overflow: 'hidden', borderRadius: 4, background: 'var(--bg-raised)' }}>
+                  <Image src={item.image} alt={item.name} fill className="object-cover" />
                 </div>
-              ))}
-            </div>
-
-            {/* Summary */}
-            <div className="md:col-span-5 sticky top-32">
-              <div className="glass-panel p-stack-md rounded-lg shadow-2xl space-y-stack-md">
-                <h2 className="font-headline-md text-headline-md text-on-surface border-b border-outline-variant/30 pb-4">Résumé</h2>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-on-surface-variant font-body-md text-body-md">
-                    <span>Sous-total</span>
-                    <span>{totalPrice().toLocaleString('fr-MA')} MAD</span>
-                  </div>
-                  <div className="flex justify-between text-on-surface-variant font-body-md text-body-md">
-                    <span>Livraison</span>
-                    <span>Gratuit</span>
-                  </div>
-                  <div className="flex justify-between items-end pt-2 border-t border-outline-variant/30">
-                    <span className="font-headline-md text-headline-md text-on-surface">Total</span>
-                    <span className="font-headline-md text-headline-md text-primary">{totalPrice().toLocaleString('fr-MA')} MAD</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', color: 'var(--fg-primary)', marginBottom: 4 }}>{item.name}</h3>
+                  {item.brand && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.65rem', color: 'var(--gold-700)', marginBottom: 8 }}>{item.brand}</p>}
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--gold-400)', fontWeight: 600 }}>{item.price.toFixed(2)} MAD</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                    <div className="glass-card" style={{ display: 'flex', alignItems: 'center' }}>
+                      <button onClick={() => updateQuantity(item.productId, item.quantity - 1, item.volume)}
+                        style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Minus size={12} /></button>
+                      <span style={{ width: 32, textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '0.78rem' }}>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.volume)}
+                        style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Plus size={12} /></button>
+                    </div>
+                    <button onClick={() => removeItem(item.productId, item.volume)}
+                      style={{ color: 'var(--fg-subtle)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.15s' }}
+                      className="hover:text-red-400"><Trash2 size={14} /></button>
                   </div>
                 </div>
-                <Link
-                  href="/commande"
-                  className="block w-full text-center bg-primary text-on-primary font-label-caps text-label-caps py-5 px-8 hover:bg-primary-fixed transition-colors duration-300 tracking-widest uppercase"
-                >
-                  Commander
-                </Link>
-                <p className="text-center font-label-caps text-label-caps text-on-surface-variant opacity-60">
-                  Paiement à la livraison
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: 600, color: 'var(--fg-muted)' }}>{(item.price * item.quantity).toFixed(2)} MAD</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <div className="glass-card" style={{ padding: '1.5rem', height: 'fit-content' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--fg-primary)', marginBottom: '1.5rem' }}>Récapitulatif</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--fg-muted)' }}>Sous-total</span>
+                <span style={{ color: 'var(--fg-muted)' }}>{subtotal.toFixed(2)} MAD</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--fg-muted)' }}>Livraison</span>
+                <span style={{ color: shipping === 0 ? 'var(--gold-500)' : 'var(--fg-muted)' }}>{shipping === 0 ? 'Livraison offerte' : `${shipping.toFixed(2)} MAD`}</span>
+              </div>
+              {shipping > 0 && (
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)' }}>
+                  Ajoutez {(FREE_ABOVE - subtotal).toFixed(0)} MAD pour la livraison gratuite
                 </p>
+              )}
+              <div className="divider-gold" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+                <span style={{ color: 'var(--fg-muted)' }}>Total</span>
+                <span style={{ color: 'var(--gold-400)', fontSize: '1.1rem' }}>{grand.toFixed(2)} MAD</span>
               </div>
             </div>
+            <Link href="/commande" className="btn-gold-filled" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              Commander
+            </Link>
+            <Link href="/boutique" style={{ marginTop: 12, display: 'block', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', textDecoration: 'none' }}
+              className="hover:text-[var(--gold-400)] transition-colors">
+              Continuer mes achats
+            </Link>
           </div>
         </div>
-      </main>
-    </>
+      </div>
+    </div>
   )
 }

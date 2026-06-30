@@ -1,40 +1,34 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/lib/store'
 import { placeOrder } from '@/app/actions/order'
 
-function buildWhatsAppUrl(items: ReturnType<typeof useCartStore.getState>['items'], total: number, customer: { name: string; phone: string; wilaya: string; city: string; address: string }) {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '212600000000'
-  const lines = [
-    `*Nouvelle commande — amine.parfume*`,
-    ``,
-    ...items.map((item) => `• ${item.brand} — ${item.name} (${item.type === 'decant' ? 'Échantillon' : 'Flacon'}) x${item.quantity} — ${(item.price * item.quantity).toLocaleString('fr-MA')} MAD`),
-    ``,
-    `*Total: ${total.toLocaleString('fr-MA')} MAD*`,
-    `*Paiement: À la livraison*`,
-    ``,
-    `*Client:* ${customer.name}`,
-    `*Tél:* ${customer.phone}`,
-    `*Wilaya:* ${customer.wilaya}`,
-    `*Ville:* ${customer.city}`,
-    `*Adresse:* ${customer.address}`,
-  ]
-  return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`
-}
+const SHIPPING_COST = 30
+const FREE_ABOVE = 500
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCartStore()
-  const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    city: '',
-    address: '',
-    wilaya: '',
-  })
+  const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({ name: '', phone: '', city: '', address: '', wilaya: '' })
+
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) return null
+
+  if (items.length === 0) {
+    router.push('/panier')
+    return null
+  }
+
+  const subtotal = totalPrice()
+  const shipping = subtotal >= FREE_ABOVE ? 0 : SHIPPING_COST
+  const grand = subtotal + shipping
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -42,235 +36,117 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (items.length === 0) return
-
-    setSubmitting(true)
+    if (!form.name || !form.phone || !form.city || !form.address) return
+    setLoading(true)
 
     const orderItems = items.map((item) => ({
-      productId: item.productId,
-      name: item.name,
-      brand: item.brand,
-      price: item.price,
-      quantity: item.quantity,
+      productId: item.productId, name: item.name, brand: item.brand, price: item.price, quantity: item.quantity,
     }))
 
     const result = await placeOrder({
-      items: orderItems,
-      customerName: form.name,
-      customerPhone: form.phone,
-      address: form.address,
-      city: form.city,
-      wilaya: form.wilaya,
-      total: totalPrice(),
+      items: orderItems, customerName: form.name, customerPhone: form.phone,
+      address: form.address, city: form.city, wilaya: form.wilaya, total: grand,
     })
 
     if (result.success) {
-      const whatsappUrl = buildWhatsAppUrl(items, totalPrice(), form)
       clearCart()
-      window.location.href = whatsappUrl
+      router.push('/confirmation')
     } else {
-      setSubmitting(false)
+      setLoading(false)
       alert('Une erreur est survenue. Veuillez réessayer.')
     }
   }
 
-  if (items.length === 0) {
-    return (
-      <>
-        <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-          <div className="w-6 h-6" />
-          <Link href="/" className="font-display-lg text-display-lg-mobile italic text-on-surface">
-            amine.parfume
-          </Link>
-          <div className="w-6 h-6" />
-        </header>
-        <main className="flex-grow pt-24 pb-section-padding px-gutter max-w-container-max mx-auto w-full">
-          <div className="text-center py-24">
-            <p className="font-display-lg text-display-lg-mobile italic text-on-surface-variant">
-              Votre panier est vide
-            </p>
-            <Link href="/boutique" className="mt-8 inline-block font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity duration-300 uppercase tracking-[0.2em]">
-              Découvrir la boutique
-            </Link>
-          </div>
-        </main>
-      </>
-    )
-  }
-
   return (
-    <>
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4 transition-opacity duration-500">
-        <Link href="/panier" aria-label="Retour au panier" className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500 flex items-center gap-2">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>arrow_back</span>
-        </Link>
-        <Link href="/" className="font-display-lg text-display-lg-mobile italic text-on-surface dark:text-on-surface tracking-tight">
-          amine.parfume
-        </Link>
-        <div className="w-6 h-6" />
-      </header>
+    <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-10">
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'var(--fg-primary)', marginBottom: '2.5rem' }}>Finaliser la commande</h1>
 
-      {/* Main Checkout Canvas */}
-      <main className="flex-grow pt-24 pb-section-padding px-gutter md:px-0">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-stack-lg items-start">
-          {/* Left Column: Checkout Form */}
-          <div className="md:col-span-7 space-y-stack-md">
-            <div className="space-y-stack-sm">
-              <h1 className="font-headline-md text-headline-md font-arabic-headline">Finaliser la commande</h1>
-              <p className="font-body-md text-body-md text-on-surface-variant">Veuillez entrer vos coordonnées pour la livraison.</p>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* Form */}
+            <div className="lg:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="glass-card" style={{ padding: '1.5rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold-600)', marginBottom: '1.5rem' }}>Informations de livraison</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginBottom: 6, display: 'block' }}>Nom complet *</label>
+                    <input name="name" value={form.name} onChange={handleChange} className="input-luxury" required />
+                  </div>
+                  <div>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginBottom: 6, display: 'block' }}>Téléphone *</label>
+                    <input name="phone" value={form.phone} onChange={handleChange} className="input-luxury" type="tel" required />
+                  </div>
+                  <div>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginBottom: 6, display: 'block' }}>Wilaya *</label>
+                    <input name="wilaya" value={form.wilaya} onChange={handleChange} className="input-luxury" required />
+                  </div>
+                  <div>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginBottom: 6, display: 'block' }}>Ville *</label>
+                    <input name="city" value={form.city} onChange={handleChange} className="input-luxury" required />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginBottom: 6, display: 'block' }}>Adresse *</label>
+                    <input name="address" value={form.address} onChange={handleChange} className="input-luxury" required />
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-card" style={{ padding: '1.5rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold-600)', marginBottom: '1rem' }}>Mode de paiement</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, border: '1px solid var(--border-mid)', padding: '1rem', borderRadius: 4 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid var(--gold-400)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--gold-400)' }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-muted)' }}>💵 Paiement à la livraison</span>
+                </div>
+              </div>
             </div>
-            <form className="space-y-stack-md pt-stack-sm" onSubmit={handleSubmit}>
-              <div className="space-y-stack-md">
-                <div className="relative">
-                  <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1" htmlFor="name">
-                    Nom Complet
-                  </label>
-                  <input
-                    className="input-underline w-full font-body-lg text-body-lg text-on-surface py-2 focus:ring-0"
-                    id="name"
-                    name="name"
-                    placeholder="Votre nom complet"
-                    required
-                    type="text"
-                    value={form.name}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="relative">
-                  <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1" htmlFor="phone">
-                    Numéro de Téléphone
-                  </label>
-                  <input
-                    className="input-underline w-full font-body-lg text-body-lg text-on-surface py-2 focus:ring-0"
-                    id="phone"
-                    name="phone"
-                    placeholder="+212 6 XX XX XX XX"
-                    required
-                    type="tel"
-                    value={form.phone}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="relative">
-                  <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1" htmlFor="wilaya">
-                    Wilaya
-                  </label>
-                  <input
-                    className="input-underline w-full font-body-lg text-body-lg text-on-surface py-2 focus:ring-0"
-                    id="wilaya"
-                    name="wilaya"
-                    placeholder="Votre wilaya"
-                    required
-                    type="text"
-                    value={form.wilaya}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="relative">
-                  <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1" htmlFor="city">
-                    Ville
-                  </label>
-                  <input
-                    className="input-underline w-full font-body-lg text-body-lg text-on-surface py-2 focus:ring-0"
-                    id="city"
-                    name="city"
-                    placeholder="Casablanca"
-                    required
-                    type="text"
-                    value={form.city}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="relative">
-                  <label className="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1" htmlFor="address">
-                    Adresse de Livraison
-                  </label>
-                  <input
-                    className="input-underline w-full font-body-lg text-body-lg text-on-surface py-2 focus:ring-0"
-                    id="address"
-                    name="address"
-                    placeholder="Avenue, Rue, Numéro"
-                    required
-                    type="text"
-                    value={form.address}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              {/* Payment Method Note */}
-              <div className="mt-stack-lg p-stack-sm bg-surface-container-low rounded-DEFAULT border border-outline-variant flex items-start gap-4">
-                <span className="material-symbols-outlined text-primary mt-1" style={{ fontVariationSettings: "'FILL' 0" }}>local_shipping</span>
-                <div>
-                  <h3 className="font-body-lg text-body-lg font-medium text-on-surface">Paiement à la livraison</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-                    Vous paierez en espèces lors de la réception de votre commande.
-                  </p>
-                </div>
-              </div>
-            </form>
-          </div>
 
-          {/* Right Column: Order Summary */}
-          <div className="md:col-span-5 sticky top-32">
-            <div className="glass-panel p-stack-md rounded-lg shadow-2xl space-y-stack-md relative overflow-hidden">
-              {/* Decorative gradient */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-              <h2 className="font-headline-md text-headline-md text-on-surface border-b border-outline-variant/30 pb-4">Résumé</h2>
-              {/* Items */}
-              <div className="space-y-4">
+            {/* Summary */}
+            <div className="glass-card" style={{ padding: '1.5rem', height: 'fit-content' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--fg-primary)', marginBottom: '1.5rem' }}>Récapitulatif</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: '1rem', maxHeight: 256, overflowY: 'auto' }}>
                 {items.map((item) => (
-                  <div key={item.productId} className="flex items-center gap-4">
-                    <div className="w-16 h-20 bg-surface-container-high rounded relative overflow-hidden flex-shrink-0">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-cover opacity-80 mix-blend-luminosity"
-                      />
+                  <div key={`${item.productId}-${item.volume ?? ''}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 48, height: 56, position: 'relative', flexShrink: 0, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-raised)' }}>
+                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      <span style={{ position: 'absolute', top: -6, right: -6, width: 16, height: 16, borderRadius: '50%', background: 'var(--gold-400)', color: '#080b14', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
                     </div>
-                    <div className="flex-grow">
-                      <h4 className="font-body-lg text-body-lg text-on-surface tracking-wide">{item.name}</h4>
-                      <p className="font-body-md text-body-md text-on-surface-variant">{item.brand} - {item.type === 'decant' ? 'Échantillon' : 'Flacon'}</p>
-                      <p className="font-label-caps text-label-caps text-on-surface-variant mt-1">Qté: {item.quantity}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-body-lg text-body-lg text-primary">{(item.price * item.quantity).toLocaleString('fr-MA')} MAD</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--gold-500)' }}>{(item.price * item.quantity).toFixed(2)} MAD</p>
                     </div>
                   </div>
                 ))}
               </div>
-              {/* Totals */}
-              <div className="border-t border-outline-variant/30 pt-4 space-y-2">
-                <div className="flex justify-between text-on-surface-variant font-body-md text-body-md">
-                  <span>Sous-total</span>
-                  <span>{totalPrice().toLocaleString('fr-MA')} MAD</span>
+              <div className="divider-gold" style={{ margin: '1rem 0' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--fg-muted)' }}>Sous-total</span>
+                  <span>{subtotal.toFixed(2)} MAD</span>
                 </div>
-                <div className="flex justify-between text-on-surface-variant font-body-md text-body-md">
-                  <span>Livraison (Standard)</span>
-                  <span>Gratuit</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--fg-muted)' }}>Livraison</span>
+                  <span style={{ color: shipping === 0 ? 'var(--gold-500)' : '' }}>{shipping === 0 ? 'Livraison offerte' : `${shipping.toFixed(2)} MAD`}</span>
                 </div>
-                <div className="flex justify-between items-end pt-2">
-                  <span className="font-headline-md text-headline-md text-on-surface">Total</span>
-                  <span className="font-headline-md text-headline-md text-primary">{totalPrice().toLocaleString('fr-MA')} MAD</span>
+                <div className="divider-gold" />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '1.1rem' }}>
+                  <span>Total</span>
+                  <span style={{ color: 'var(--gold-400)' }}>{grand.toFixed(2)} MAD</span>
                 </div>
               </div>
-              {/* CTA Button */}
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="w-full mt-stack-md bg-primary-container hover:bg-primary-fixed text-on-primary-container font-label-caps text-label-caps uppercase py-5 px-8 transition-colors duration-500 tracking-widest relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="relative z-10">{submitting ? 'Envoi en cours...' : 'Confirmer via WhatsApp'}</span>
-                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0" />
+              <button type="submit" disabled={loading}
+                className="btn-gold-filled" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: loading ? 0.5 : 1 }}>
+                {loading ? 'Traitement...' : 'Passer la commande'}
               </button>
-              <p className="text-center font-label-caps text-label-caps text-on-surface-variant mt-4 opacity-60">
+              <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)', marginTop: 12 }}>
                 Paiement à la livraison
               </p>
             </div>
           </div>
-        </div>
-      </main>
-    </>
+        </form>
+      </div>
+    </div>
   )
 }

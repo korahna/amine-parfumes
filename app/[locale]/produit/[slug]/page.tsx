@@ -1,11 +1,11 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { ShoppingBag, Minus, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/lib/store'
-import { SkeletonProductDetail } from '@/components/perfume/SkeletonProductDetail'
 
 interface Product {
   id: string
@@ -13,7 +13,6 @@ interface Product {
   name_fr: string
   name_ar: string
   description_fr: string
-  description_ar: string
   brand: string
   type: 'full' | 'decant'
   price: number
@@ -27,18 +26,15 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedVariant, setSelectedVariant] = useState<{ volume: number; price: number } | null>(null)
+  const [selectedImg, setSelectedImg] = useState(0)
+  const [qty, setQty] = useState(1)
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
 
   useEffect(() => {
     const fetchProduct = async () => {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', params.slug)
-        .single()
-
+      const { data } = await supabase.from('products').select('*').eq('slug', params.slug).single()
       if (data) {
         setProduct(data)
         const v = data.variants?.length ? data.variants : (data.volume ? [{ volume: data.volume, price: data.price }] : [])
@@ -51,153 +47,131 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   if (loading) {
     return (
-      <>
-        <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-          <button className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-            <span className="material-symbols-outlined">language</span>
-          </button>
-          <Link href="/" className="font-display-lg text-display-lg-mobile md:text-display-lg italic text-on-surface">
-            amine.parfume
-          </Link>
-          <button className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-            <span className="material-symbols-outlined">shopping_bag</span>
-          </button>
-        </header>
-        <main className="pt-32 pb-section-padding px-gutter max-w-container-max mx-auto">
-          <SkeletonProductDetail />
-        </main>
-      </>
+      <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
+            <div style={{ aspectRatio: '1', background: 'var(--bg-surface)', borderRadius: 8, animation: 'shimmer 2s ease-in-out infinite', backgroundSize: '200% 100%' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} style={{ height: 20, background: 'var(--bg-surface)', borderRadius: 4, animation: 'shimmer 2s ease-in-out infinite', backgroundSize: '200% 100%' }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
   if (!product) {
     return (
-      <>
-        <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-          <button className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-            <span className="material-symbols-outlined">language</span>
-          </button>
-          <Link href="/" className="font-display-lg text-display-lg-mobile md:text-display-lg italic text-on-surface">
-            amine.parfume
-          </Link>
-          <button className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-            <span className="material-symbols-outlined">shopping_bag</span>
-          </button>
-        </header>
-        <main className="pt-32 pb-section-padding px-gutter max-w-container-max mx-auto">
-          <div className="text-center py-24">
-            <p className="font-display-lg text-display-lg-mobile italic text-on-surface-variant">
-              Ce parfum n&apos;existe pas...
-            </p>
-            <Link href="/boutique" className="mt-8 inline-block font-label-caps text-label-caps text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity duration-300 uppercase tracking-[0.2em]">
-              Retour à la boutique
-            </Link>
-          </div>
-        </main>
-      </>
+      <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+          <span style={{ fontSize: 36, display: 'block', marginBottom: '1rem', opacity: 0.25 }}>🌹</span>
+          <p style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-subtle)', fontSize: '0.88rem' }}>Ce parfum n&apos;existe pas...</p>
+          <Link href="/boutique" className="btn-gold" style={{ marginTop: '1rem', display: 'inline-block' }}><span>Retour à la boutique</span></Link>
+        </div>
+      </div>
     )
   }
 
-  const allNotes = [
-    ...(product.scent_notes?.top ?? []),
-    ...(product.scent_notes?.heart ?? []),
-    ...(product.scent_notes?.base ?? []),
-  ]
-  const variants = product.variants?.length
-    ? product.variants
-    : (product.volume ? [{ volume: product.volume, price: product.price }] : [])
+  const images = product.images?.length ? product.images : []
+  const variants = product.variants?.length ? product.variants : (product.volume ? [{ volume: product.volume, price: product.price }] : [])
+
+  const handleAdd = () => {
+    if (!selectedVariant) return
+    for (let i = 0; i < qty; i++) {
+      addItem({ productId: product.id, name: product.name_fr, brand: product.brand, price: selectedVariant.price, volume: selectedVariant.volume, image: images[0] ?? '/images/placeholder.jpg', type: product.type })
+    }
+    openCart()
+  }
 
   return (
-    <>
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter py-4">
-        <button className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-          <span className="material-symbols-outlined" data-icon="language">language</span>
-        </button>
-        <Link href="/" className="font-display-lg text-display-lg-mobile md:text-display-lg italic text-on-surface dark:text-on-surface text-center">
-          amine.parfume
-        </Link>
-        <button onClick={openCart} className="text-on-surface-variant hover:opacity-70 transition-opacity duration-500">
-          <span className="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
-        </button>
-      </header>
+    <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
+        {/* Breadcrumb */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '2rem', fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)' }}>
+          <Link href="/" className="hover:text-[var(--gold-400)] transition-colors" style={{ color: 'inherit', textDecoration: 'none' }}>Accueil</Link>
+          <span>/</span>
+          <Link href="/boutique" className="hover:text-[var(--gold-400)] transition-colors" style={{ color: 'inherit', textDecoration: 'none' }}>Catalogue</Link>
+          <span>/</span>
+          <span style={{ color: 'var(--fg-muted)' }}>{product.name_fr}</span>
+        </div>
 
-      {/* Main Content */}
-      <main className="pt-32 pb-section-padding px-gutter max-w-container-max mx-auto fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 items-start">
-          {/* Product Image */}
-          <div className="md:col-span-7 relative group">
-            <div className="skeleton absolute inset-0 rounded-lg -z-10" />
-            <Image
-              src={product.images?.[0] ?? '/images/placeholder.jpg'}
-              alt={product.name_fr}
-              width={800}
-              height={1000}
-              className="w-full h-auto object-cover rounded-sm shadow-2xl transition-transform duration-700 group-hover:scale-[1.02]"
-              style={{ aspectRatio: '4/5' }}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* Images */}
+          <div>
+            <div className="relative aspect-square overflow-hidden mb-4" style={{ background: 'var(--bg-raised)', borderRadius: 8 }}>
+              {images[selectedImg] ? (
+                <Image src={images[selectedImg]} alt={product.name_fr} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 64, opacity: 0.1 }}>🌹</div>
+              )}
+            </div>
+            {images.length > 1 && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                {images.map((img, i) => (
+                  <button key={i} onClick={() => setSelectedImg(i)}
+                    style={{ width: 64, height: 64, position: 'relative', overflow: 'hidden', border: `1px solid ${selectedImg === i ? 'var(--gold-400)' : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', transition: 'border-color 0.2s' }}>
+                    <Image src={img} alt="" fill className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Product Details */}
-          <div className="md:col-span-5 flex flex-col pt-8 md:pt-16">
-            <p className="font-label-caps text-label-caps text-on-surface-variant tracking-[0.3em] mb-4">{product.brand.toUpperCase()}</p>
-            <h1 className="font-display-lg-mobile md:text-display-lg text-on-surface mb-4">
-              {product.name_fr}
-            </h1>
+          {/* Info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {product.brand && (
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--gold-600)' }}>{product.brand}</p>
+            )}
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,4vw,2.5rem)', color: 'var(--fg-primary)', lineHeight: 1.1 }}>{product.name_fr}</h1>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: 'var(--gold-400)' }}>
+                {selectedVariant ? selectedVariant.price.toFixed(2) : Number(product.price).toFixed(2)} <span style={{ fontSize: '0.9rem' }}>MAD</span>
+              </span>
+            </div>
+
+            {/* Meta */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {selectedVariant?.volume && <span className="glass-card" style={{ padding: '4px 12px', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: 'var(--fg-muted)' }}>{selectedVariant.volume} ml</span>}
+              <span className="glass-card" style={{ padding: '4px 12px', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: 'var(--fg-muted)' }}>{product.type === 'decant' ? 'Échantillon' : 'Flacon'}</span>
+            </div>
+
             {product.description_fr && (
-              <p className="font-body-md text-body-md text-on-surface mb-12 leading-relaxed">
-                {product.description_fr}
-              </p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-muted)', lineHeight: 1.85, borderLeft: '1px solid var(--border-mid)', paddingLeft: '1rem' }}>{product.description_fr}</p>
             )}
 
-            {/* Scent Pyramid */}
+            {/* Scent notes */}
             {(product.scent_notes?.top?.length > 0 || product.scent_notes?.heart?.length > 0 || product.scent_notes?.base?.length > 0) && (
-              <div className="mb-12 bg-surface-container-low p-6 rounded-sm border border-surface-container-highest">
-                <h3 className="font-label-caps text-label-caps text-primary mb-6 text-center">Pyramide Olfactive</h3>
-                <div className="flex flex-col items-center gap-4 text-center">
-                  {product.scent_notes.top?.length > 0 && (
-                    <>
-                      <div className="flex flex-col items-center">
-                        <span className="text-on-surface-variant font-label-caps text-[10px]">TÊTE</span>
-                        <span className="text-on-surface font-body-md">{product.scent_notes.top.join(' · ')}</span>
+              <div className="glass-card" style={{ padding: '1.25rem' }}>
+                <h3 style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold-600)', marginBottom: '1rem' }}>Composition olfactive</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {[
+                    { key: 'top', notes: product.scent_notes?.top, icon: '🌸', label: 'Notes de tête' },
+                    { key: 'heart', notes: product.scent_notes?.heart, icon: '🌹', label: 'Notes de cœur' },
+                    { key: 'base', notes: product.scent_notes?.base, icon: '🪵', label: 'Notes de fond' },
+                  ].filter((n) => n.notes?.length).map((n) => (
+                    <div key={n.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <span style={{ fontSize: 14, marginTop: 2 }}>{n.icon}</span>
+                      <div>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.55rem', color: 'var(--gold-700)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 4 }}>{n.label}</p>
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--fg-muted)' }}>{n.notes?.join(', ')}</p>
                       </div>
-                      <div className="w-px h-6 bg-outline-variant" />
-                    </>
-                  )}
-                  {product.scent_notes.heart?.length > 0 && (
-                    <>
-                      <div className="flex flex-col items-center">
-                        <span className="text-on-surface-variant font-label-caps text-[10px]">CŒUR</span>
-                        <span className="text-on-surface font-body-md">{product.scent_notes.heart.join(' · ')}</span>
-                      </div>
-                      <div className="w-px h-6 bg-outline-variant" />
-                    </>
-                  )}
-                  {product.scent_notes.base?.length > 0 && (
-                    <div className="flex flex-col items-center">
-                      <span className="text-on-surface-variant font-label-caps text-[10px]">FOND</span>
-                      <span className="text-on-surface font-body-md">{product.scent_notes.base.join(' · ')}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Volume Selector */}
-            {variants.length > 0 && (
-              <div className="mb-12">
-                <span className="block font-label-caps text-label-caps text-on-surface-variant mb-4">FORMAT</span>
-                <div className="flex gap-4 flex-wrap">
+            {/* Variant selector */}
+            {variants.length > 1 && (
+              <div>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--gold-400)', marginBottom: '0.5rem', display: 'block' }}>Format</span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {variants.map((v) => (
-                    <button
-                      key={v.volume}
-                      onClick={() => setSelectedVariant(v)}
-                      className={`flex-1 min-w-[80px] py-3 border font-label-caps text-label-caps transition-colors duration-300 ${
-                        selectedVariant?.volume === v.volume
-                          ? 'border-primary text-primary bg-primary/10'
-                          : 'border-outline hover:border-primary text-on-surface'
-                      }`}
-                    >
+                    <button key={v.volume} onClick={() => setSelectedVariant(v)}
+                      style={{ flex: 1, minWidth: 80, padding: '0.6rem', fontFamily: 'var(--font-body)', fontSize: '0.7rem', color: selectedVariant?.volume === v.volume ? 'var(--gold-400)' : 'var(--fg-muted)', background: selectedVariant?.volume === v.volume ? 'rgba(201,162,39,0.09)' : 'transparent', border: `1px solid ${selectedVariant?.volume === v.volume ? 'var(--gold-400)' : 'var(--border)'}`, borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                       {v.volume} ML
                     </button>
                   ))}
@@ -205,64 +179,26 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col gap-4 mt-auto">
-              <button
-                onClick={() => {
-                  if (!selectedVariant) return
-                  addItem({
-                    productId: product.id,
-                    name: product.name_fr,
-                    brand: product.brand,
-                    price: selectedVariant.price,
-                    volume: selectedVariant.volume,
-                    image: product.images?.[0] ?? '/images/placeholder.jpg',
-                    type: product.type,
-                  })
-                  openCart()
-                }}
-                disabled={!selectedVariant}
-                className="w-full bg-primary text-on-primary font-label-caps text-label-caps py-5 px-8 hover:bg-primary-fixed transition-colors duration-300 tracking-widest disabled:opacity-50"
-              >
-                AJOUTER AU PANIER — {selectedVariant ? `${selectedVariant.volume} ML — ${selectedVariant.price.toLocaleString('fr-MA')} DH` : 'Choisir un format'}
+            {/* Qty + Add to cart */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className="glass-card" style={{ display: 'flex', alignItems: 'center' }}>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Minus size={14} /></button>
+                <span style={{ width: 40, textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-primary)' }}>{qty}</span>
+                <button onClick={() => setQty(qty + 1)} style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-muted)', background: 'none', border: 'none', cursor: 'pointer' }}><Plus size={14} /></button>
+              </div>
+              <button onClick={handleAdd} disabled={!selectedVariant}
+                className="btn-gold-filled" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: !selectedVariant ? 0.45 : 1 }}>
+                <ShoppingBag size={16} />
+                Ajouter au panier
               </button>
-              <a
-                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '212600000000'}?text=${encodeURIComponent(
-                  `Bonjour, je suis intéressé(e) par:\n\n*${product.brand} — ${product.name_fr}*\n${selectedVariant ? `${selectedVariant.volume} ML — ${selectedVariant.price.toLocaleString('fr-MA')} MAD` : ''}\n\nMerci!`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full border border-inverse-surface text-inverse-surface font-label-caps text-label-caps py-5 px-8 hover:bg-inverse-surface hover:text-surface transition-colors duration-300 flex items-center justify-center gap-3"
-              >
-                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                </svg>
-                COMMANDER VIA WHATSAPP
-              </a>
             </div>
+
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)' }}>
+              ✓ En stock
+            </p>
           </div>
         </div>
-      </main>
-
-      {/* BottomNavBar (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center py-4 px-2 bg-surface-container/90 dark:bg-surface-container/90 backdrop-blur-md z-50">
-        <Link href="/" className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-          <span className="material-symbols-outlined" data-icon="home">home</span>
-          <span className="font-label-caps text-label-caps mt-1">Home</span>
-        </Link>
-        <Link href="/boutique" className="flex flex-col items-center justify-center text-primary font-bold">
-          <span className="material-symbols-outlined" data-icon="storefront">storefront</span>
-          <span className="font-label-caps text-label-caps mt-1">Boutique</span>
-        </Link>
-        <button className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-          <span className="material-symbols-outlined" data-icon="search">search</span>
-          <span className="font-label-caps text-label-caps mt-1">Search</span>
-        </button>
-        <button className="flex flex-col items-center justify-center text-secondary-fixed-dim hover:text-primary transition-colors duration-300">
-          <span className="material-symbols-outlined" data-icon="person">person</span>
-          <span className="font-label-caps text-label-caps mt-1">Account</span>
-        </button>
-      </nav>
-    </>
+      </div>
+    </div>
   )
 }
