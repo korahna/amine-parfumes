@@ -4,37 +4,26 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-const HERO_PERFUMES = [
-  {
-    id: 0,
-    src: '/images/hero-armani.jpg',
-    name: 'Stronger With You',
-    sub: 'Intensely · Emporio Armani',
-    mood: 'Chaud & Ambré',
-    accent: '#d4722a',
-    tag: 'Homme',
-  },
-  {
-    id: 1,
-    src: '/images/hero-burberry.jpg',
-    name: 'Burberry Her',
-    sub: 'Elixir de Parfum',
-    mood: 'Floral & Fruité',
-    accent: '#c9a0a0',
-    tag: 'Femme',
-  },
-  {
-    id: 2,
-    src: '/images/hero-jbg.jpg',
-    name: 'Le Beau',
-    sub: 'Jean Paul Gaultier',
-    mood: 'Boisé & Exotique',
-    accent: '#3aaa76',
-    tag: 'Homme',
-  },
+export interface HeroSlide {
+  id: string
+  src: string
+  name: string
+  sub: string
+  mood: string
+  accent: string
+  tag: string
+}
+
+const FALLBACK_SLIDES: HeroSlide[] = [
+  { id: '0', src: '/images/hero-armani.jpg', name: 'Stronger With You', sub: 'Intensely · Emporio Armani', mood: 'Chaud & Ambré', accent: '#d4722a', tag: 'Homme' },
+  { id: '1', src: '/images/hero-burberry.jpg', name: 'Burberry Her', sub: 'Elixir de Parfum', mood: 'Floral & Fruité', accent: '#c9a0a0', tag: 'Femme' },
+  { id: '2', src: '/images/hero-jbg.jpg', name: 'Le Beau', sub: 'Jean Paul Gaultier', mood: 'Boisé & Exotique', accent: '#3aaa76', tag: 'Homme' },
 ]
 
-export function Hero() {
+export function Hero({ slides }: { slides?: HeroSlide[] }) {
+  const heroSlides = slides && slides.length > 0 ? slides : FALLBACK_SLIDES
+  const count = heroSlides.length
+
   const [active, setActive] = useState(0)
   const [prev, setPrev] = useState<number | null>(null)
   const [transitioning, setTrans] = useState(false)
@@ -50,17 +39,17 @@ export function Hero() {
   }, [active, transitioning])
 
   useEffect(() => {
-    timerRef.current = setTimeout(() => advance((active + 1) % 3), 5500)
+    timerRef.current = setTimeout(() => advance((active + 1) % count), 5500)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [active, advance])
+  }, [active, advance, count])
 
-  const cur = HERO_PERFUMES[active]
-  const prv = prev !== null ? HERO_PERFUMES[prev] : null
+  const cur = heroSlides[active]
+  const prv = prev !== null ? heroSlides[prev] : null
 
   return (
     <section style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', background: '#05060d' }}>
       {/* BG layers */}
-      {HERO_PERFUMES.map((p, i) => (
+      {heroSlides.map((p, i) => (
         <div key={p.id} style={{
           position: 'absolute', inset: 0, zIndex: i === active ? 1 : i === prev ? 2 : 0,
           opacity: i === active ? 1 : i === prev ? 0 : 0,
@@ -164,7 +153,7 @@ export function Hero() {
 
       {/* Slide dots */}
       <div style={{ position: 'absolute', bottom: '1.75rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20, display: 'flex', gap: 8, alignItems: 'center' }}>
-        {HERO_PERFUMES.map((_, i) => (
+        {heroSlides.map((_, i) => (
           <button key={i} onClick={() => advance(i)}
             style={{ width: i === active ? 28 : 7, height: 7, borderRadius: 4, background: i === active ? cur.accent : 'rgba(253,248,238,0.2)', border: 'none', cursor: 'pointer', transition: 'all 0.35s ease', padding: 0 }} />
         ))}
@@ -172,7 +161,7 @@ export function Hero() {
 
       {/* Arrow nav */}
       {(['prev', 'next'] as const).map((dir) => (
-        <button key={dir} onClick={() => advance(dir === 'next' ? (active + 1) % 3 : (active + 2) % 3)}
+        <button key={dir} onClick={() => advance(dir === 'next' ? (active + 1) % count : (active - 1 + count) % count)}
           className="hidden sm:flex"
           style={{
             position: 'absolute', top: '50%', transform: 'translateY(-50%)',
