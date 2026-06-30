@@ -28,23 +28,24 @@ export function ProductCard({ id, slug, name, brand, type, price, image, scentNo
   }
 
   return (
-    <div className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)' }}>
-      <Link href={`/produit/${slug}`}>
-        {/* Image */}
-        <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden' }}>
+    <div className="product-card group" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+      <Link href={`/produit/${slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        {/* Image with rounded top */}
+        <div className="card-img relative" style={{ aspectRatio: '3/4', background: 'var(--bg-raised)', overflow: 'hidden', borderRadius: 'var(--r-lg) var(--r-lg) 0 0' }}>
           <Image
             src={image}
             alt={name}
             fill
             className="object-cover"
             sizes="(max-width:768px) 50vw, 25vw"
+            style={{ transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' }}
           />
 
           {/* Hover overlay with CTA */}
-          <div className="overlay">
+          <div className="overlay" style={{ borderRadius: 'var(--r-lg) var(--r-lg) 0 0' }}>
             <button onClick={handleAddToCart}
               className="btn-gold-filled flex items-center gap-2"
-              style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem' }}>
+              style={{ padding: '0.55rem 1.25rem', fontSize: '0.65rem', borderRadius: 'var(--r-sm)' }}>
               <ShoppingBag size={12} />
               Ajouter au panier
             </button>
@@ -58,7 +59,7 @@ export function ProductCard({ id, slug, name, brand, type, price, image, scentNo
               {brand}
             </p>
           )}
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.2s' }}
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--fg-primary)', lineHeight: 1.2, marginBottom: '0.5rem', transition: 'color 0.3s' }}
             className="group-hover:text-[var(--gold-mid)]">
             {name}
           </h3>

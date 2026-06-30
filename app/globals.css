@@ -27,6 +27,8 @@
   --font-arabic:  'Amiri', serif;
   --gold-mid: #c9a227;
   --gold-dark: #a8821d;
+  --accent-blue: #1e2a4a;
+  --accent-blue-light: #2a3a62;
   --r-xs: 2px;
   --r-sm: 4px;
   --r-md: 8px;
@@ -34,6 +36,32 @@
   --ease: cubic-bezier(0.4,0,0.2,1);
   --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
 }
+
+/* ── LIGHT THEME ── */
+[data-theme="light"] {
+  --bg-base:    #faf8f4;
+  --bg-surface: #ffffff;
+  --bg-raised:  #f5f2ec;
+  --fg-primary: #1a1610;
+  --fg-muted:   rgba(26,22,16,0.62);
+  --fg-subtle:  rgba(26,22,16,0.32);
+  --border:      rgba(133,97,24,0.15);
+  --border-gold: rgba(133,97,24,0.12);
+  --border-mid:  rgba(133,97,24,0.3);
+  --border-high: rgba(133,97,24,0.5);
+  --gold-mid: #a8821d;
+  --gold-dark: #856118;
+  --accent-blue: #e8edf5;
+  --accent-blue-light: #dce3f0;
+}
+[data-theme="light"] .product-card:hover {
+  box-shadow: 0 20px 50px rgba(133,97,24,0.1);
+}
+[data-theme="light"] .product-card .overlay {
+  background: linear-gradient(to top, rgba(26,22,16,0.88) 0%, rgba(26,22,16,0.15) 55%, transparent 100%);
+}
+[data-theme="light"] .btn-gold:hover { color: #faf8f4; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: #faf8f4; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -118,26 +146,27 @@ body {
   position: relative; overflow: hidden;
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.35s var(--ease), border-color 0.25s var(--ease);
+  border-radius: var(--r-lg);
+  transition: transform 0.5s var(--ease-spring), box-shadow 0.4s var(--ease), border-color 0.3s var(--ease);
   will-change: transform;
   transform: translateZ(0);
 }
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 18px 42px rgba(201,162,39,0.11);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 50px rgba(201,162,39,0.12);
   border-color: var(--border-mid);
 }
 .product-card .card-img { overflow: hidden; }
-.product-card .card-img img { transition: transform 0.65s var(--ease); }
-.product-card:hover .card-img img { transform: scale(1.06); }
+.product-card .card-img img { transition: transform 0.7s cubic-bezier(0.4,0,0.2,1); }
+.product-card:hover .card-img img { transform: scale(1.08); }
 .product-card .overlay {
   position: absolute; inset: 0;
   display: flex; align-items: flex-end; justify-content: center;
   padding-bottom: 1.4rem;
   opacity: 0;
-  transition: opacity 0.3s var(--ease);
+  transition: opacity 0.35s var(--ease);
   background: linear-gradient(to top, rgba(8,11,20,0.92) 0%, rgba(8,11,20,0.2) 55%, transparent 100%);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
 .product-card:hover .overlay { opacity: 1; }
 
