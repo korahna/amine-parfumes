@@ -122,18 +122,18 @@ export function Hero({ slides }: { slides?: HeroSlide[] }) {
 
             {prv && (
               <div style={{ position: 'absolute', zIndex: 1, animation: 'bOut 0.7s ease forwards' }}>
-                <div style={{ width: 320, height: 400, position: 'relative', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+                <div style={{ width: 320, height: 400, position: 'relative' }}>
                   <Image src={prv.src} alt={prv.name} fill className="object-contain"
-                    style={{ filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.5))' }} />
+                    style={{ filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.5))', borderRadius: 'var(--r-lg)' }} />
                 </div>
               </div>
             )}
 
             <div key={`bottle-${active}`} style={{ position: 'relative', zIndex: 2, animation: 'bIn 0.8s cubic-bezier(0.34,1.4,0.64,1) forwards', opacity: 0 }}>
-              <div style={{ animation: 'bottleFloat 5s ease-in-out infinite', width: 320, height: 400, position: 'relative', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+              <div style={{ animation: 'bottleFloat 5s ease-in-out infinite', width: 320, height: 400, position: 'relative' }}>
                 <Image src={cur.src} alt={cur.name} fill priority className="object-contain"
                   sizes="320px"
-                  style={{ filter: `drop-shadow(0 32px 56px ${cur.accent}50)` }} />
+                  style={{ filter: `drop-shadow(0 32px 56px ${cur.accent}50)`, borderRadius: 'var(--r-lg)' }} />
               </div>
             </div>
 
