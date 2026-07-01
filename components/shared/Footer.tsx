@@ -58,11 +58,11 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
                 <Phone size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
-                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">+212 6XX XXX XXX</span>
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">{process.env.NEXT_PUBLIC_PHONE || '+212 6XX XXX XXX'}</span>
               </li>
               <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
                 <Mail size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
-                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">contact@amineparfumes.ma</span>
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">{process.env.NEXT_PUBLIC_EMAIL || 'contact@amineparfumes.ma'}</span>
               </li>
               <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
                 <MapPin size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
