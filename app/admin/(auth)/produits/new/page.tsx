@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ImageUpload } from '@/components/admin/ImageUpload'
 
 interface Category {
   id: string
@@ -11,7 +12,9 @@ interface Category {
   name_fr: string
 }
 
-import { ImageUpload } from '@/components/admin/ImageUpload'
+const sectionStyle: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '1.5rem' }
+const labelStyle: React.CSSProperties = { fontFamily: 'var(--font-body)', fontSize: '0.68rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--fg-muted)', marginBottom: 6, display: 'block' }
+const headingStyle: React.CSSProperties = { fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--gold-400)', marginBottom: '1rem' }
 
 export default function AdminNewProductPage() {
   const router = useRouter()
@@ -111,65 +114,60 @@ export default function AdminNewProductPage() {
   }
 
   return (
-    <div className="flex flex-col gap-stack-lg max-w-4xl">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '56rem' }}>
       <section>
-        <h2 className="font-headline-md text-headline-md text-on-surface">Nouveau Produit</h2>
-        <p className="font-body-md text-body-md text-on-surface-variant">Ajouter un produit à votre catalogue.</p>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: 'var(--fg-primary)' }}>Nouveau Produit</h2>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-muted)' }}>Ajouter un produit à votre catalogue.</p>
       </section>
 
-      <form onSubmit={handleSubmit} className="space-y-stack-lg">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Image Upload */}
-        <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
-          <h3 className="font-label-caps text-label-caps text-on-surface-variant">Image du produit</h3>
-          <ImageUpload
-            onUpload={(url) => setSelectedImage(url || null)}
-            currentUrl={selectedImage}
-          />
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>Image du produit</h3>
+          <ImageUpload onUpload={(url) => setSelectedImage(url || null)} currentUrl={selectedImage} />
         </div>
 
         {/* Bilingual Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
-          {/* French */}
-          <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
-            <h3 className="font-label-caps text-label-caps text-primary">Français</h3>
-            <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Nom</label>
-              <input required name="name_fr" value={form.name_fr} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="Nuit d'Ambre" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div style={sectionStyle}>
+            <h3 style={{ ...headingStyle, color: 'var(--gold-400)' }}>Français</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={labelStyle}>Nom</label>
+              <input required name="name_fr" value={form.name_fr} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="Nuit d'Ambre" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Description</label>
-              <textarea name="description_fr" value={form.description_fr} onChange={handleChange} rows={3} className="input-underline w-full font-body-md text-on-surface py-2 resize-none" placeholder="Une fragrance envoûtante..." />
+              <label style={labelStyle}>Description</label>
+              <textarea name="description_fr" value={form.description_fr} onChange={handleChange} rows={3} className="input-luxury" style={{ width: '100%', resize: 'none' }} placeholder="Une fragrance envoûtante..." />
             </div>
           </div>
-          {/* Arabic */}
-          <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
-            <h3 className="font-label-caps text-label-caps text-primary">العربية</h3>
-            <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">الاسم</label>
-              <input required name="name_ar" value={form.name_ar} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="ليل العنبر" dir="rtl" />
+          <div style={sectionStyle}>
+            <h3 style={{ ...headingStyle, color: 'var(--gold-400)' }}>العربية</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={labelStyle}>الاسم</label>
+              <input required name="name_ar" value={form.name_ar} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="ليل العنبر" dir="rtl" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">الوصف</label>
-              <textarea name="description_ar" value={form.description_ar} onChange={handleChange} rows={3} className="input-underline w-full font-body-md text-on-surface py-2 resize-none" placeholder="عطر ساحر..." dir="rtl" />
+              <label style={labelStyle}>الوصف</label>
+              <textarea name="description_ar" value={form.description_ar} onChange={handleChange} rows={3} className="input-luxury" style={{ width: '100%', resize: 'none' }} placeholder="عطر ساحر..." dir="rtl" />
             </div>
           </div>
         </div>
 
         {/* Product Details */}
-        <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
-          <h3 className="font-label-caps text-label-caps text-on-surface-variant">Détails</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>Détails</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Marque</label>
-              <input required name="brand" value={form.brand} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="amine.parfume" />
+              <label style={labelStyle}>Marque</label>
+              <input required name="brand" value={form.brand} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="amine.parfume" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Slug</label>
-              <input required name="slug" value={form.slug} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="nuit-dambre" />
+              <label style={labelStyle}>Slug</label>
+              <input required name="slug" value={form.slug} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="nuit-dambre" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Catégorie</label>
-              <select name="category" value={form.category} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
+              <label style={labelStyle}>Catégorie</label>
+              <select name="category" value={form.category} onChange={handleChange} className="input-luxury" style={{ width: '100%' }}>
                 <option value="">Aucune</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.name_fr}>{c.name_fr}</option>
@@ -177,36 +175,35 @@ export default function AdminNewProductPage() {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Type</label>
-              <select name="type" value={form.type} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
-                <option value="full">Parfum Complet</option>
-                <option value="decant">Échantillon</option>
-                <option value="pack">Pack</option>
-              </select>
-            </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={labelStyle}>Type</label>
+            <select name="type" value={form.type} onChange={handleChange} className="input-luxury" style={{ width: '100%', maxWidth: 280 }}>
+              <option value="full">Parfum Complet</option>
+              <option value="decant">Échantillon</option>
+              <option value="pack">Pack</option>
+            </select>
           </div>
 
           {/* Volume & Price */}
-          <div className="space-y-4">
-            <label className="font-label-caps text-label-caps text-on-surface-variant">Volumes & Prix</label>
+          <div style={{ marginTop: '1rem' }}>
+            <label style={labelStyle}>Volumes & Prix</label>
             {Object.entries(volumeOptions).map(([group, vols]) => (
-              <div key={group} className="space-y-2">
-                <p className="text-xs text-on-surface-variant/70 tracking-wider uppercase">{group}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div key={group} style={{ marginBottom: '1rem' }}>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--fg-subtle)', marginBottom: '0.5rem' }}>{group}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.75rem' }}>
                   {vols.map((vol) => {
                     const selected = variants.find((v) => v.volume === vol)
                     return (
-                      <div key={vol} className="flex items-center gap-3">
+                      <div key={vol} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <button
                           type="button"
                           onClick={() => toggleVolume(vol)}
-                          className={`w-16 h-10 text-sm font-medium border rounded transition-colors ${
-                            selected
-                              ? 'bg-primary text-on-primary border-primary'
-                              : 'border-outline-variant/40 text-on-surface-variant hover:border-primary'
-                          }`}
+                          style={{
+                            width: 64, height: 40, fontSize: '0.82rem', fontWeight: 500, borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
+                            background: selected ? 'var(--gold-400)' : 'transparent',
+                            color: selected ? 'var(--bg-base)' : 'var(--fg-muted)',
+                            border: selected ? '1px solid var(--gold-400)' : '1px solid var(--border)',
+                          }}
                         >
                           {vol} ml
                         </button>
@@ -216,7 +213,8 @@ export default function AdminNewProductPage() {
                             value={selected.price}
                             onChange={(e) => updateVariantPrice(vol, e.target.value)}
                             placeholder="Prix MAD"
-                            className="input-underline flex-1 font-body-md text-on-surface py-2 text-sm"
+                            className="input-luxury"
+                            style={{ flex: 1, fontSize: '0.82rem' }}
                           />
                         )}
                       </div>
@@ -226,45 +224,46 @@ export default function AdminNewProductPage() {
               </div>
             ))}
           </div>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input name="featured" type="checkbox" checked={form.featured} onChange={handleChange} className="w-5 h-5 accent-primary" />
-            <span className="font-body-md text-body-md text-on-surface">Mettre en vedette</span>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', marginTop: '0.5rem' }}>
+            <input name="featured" type="checkbox" checked={form.featured} onChange={handleChange} style={{ width: 18, height: 18, accentColor: 'var(--gold-400)' }} />
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-primary)' }}>Mettre en vedette</span>
           </label>
         </div>
 
         {/* Scent Notes */}
-        <div className="bg-surface-container-low p-6 rounded-lg space-y-4">
-          <h3 className="font-label-caps text-label-caps text-on-surface-variant">Notes olfactives (séparées par des virgules)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div style={sectionStyle}>
+          <h3 style={headingStyle}>Notes olfactives (séparées par des virgules)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Notes de tête</label>
-              <input name="notes_top" value={form.notes_top} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="Bergamote, Citron" />
+              <label style={labelStyle}>Notes de tête</label>
+              <input name="notes_top" value={form.notes_top} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="Bergamote, Citron" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Notes de cœur</label>
-              <input name="notes_heart" value={form.notes_heart} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="Rose, Jasmin" />
+              <label style={labelStyle}>Notes de cœur</label>
+              <input name="notes_heart" value={form.notes_heart} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="Rose, Jasmin" />
             </div>
             <div>
-              <label className="font-label-caps text-label-caps text-on-surface-variant block mb-1">Notes de fond</label>
-              <input name="notes_base" value={form.notes_base} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2" placeholder="Oud, Musc, Ambre" />
+              <label style={labelStyle}>Notes de fond</label>
+              <input name="notes_base" value={form.notes_base} onChange={handleChange} className="input-luxury" style={{ width: '100%' }} placeholder="Oud, Musc, Ambre" />
             </div>
           </div>
         </div>
 
         {/* Preview */}
         {form.name_fr && selectedImage && (
-          <div className="bg-surface-container-low p-6 rounded-lg space-y-3">
-            <h3 className="font-label-caps text-label-caps text-on-surface-variant">Aperçu</h3>
-            <div className="flex gap-6 items-start">
-              <div className="w-32 h-32 relative rounded overflow-hidden flex-shrink-0">
+          <div style={sectionStyle}>
+            <h3 style={headingStyle}>Aperçu</h3>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ width: 128, height: 128, position: 'relative', borderRadius: 'var(--r-sm)', overflow: 'hidden', flexShrink: 0 }}>
                 <Image src={selectedImage} alt={form.name_fr} fill className="object-cover" sizes="128px" />
               </div>
               <div>
-                <p className="font-label-caps text-label-caps text-on-surface-variant">{form.brand.toUpperCase()}</p>
-                <h4 className="font-display-lg text-headline-md text-on-surface">{form.name_fr}</h4>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.6rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{form.brand.toUpperCase()}</p>
+                <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--fg-primary)' }}>{form.name_fr}</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
                   {variants.filter((v) => v.price).map((v) => (
-                    <span key={v.volume} className="text-xs border border-outline-variant/30 px-2 py-1 text-on-surface-variant">
+                    <span key={v.volume} style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', padding: '2px 10px', borderRadius: 4, border: '1px solid var(--border)', color: 'var(--fg-muted)' }}>
                       {v.volume}ml — {parseFloat(v.price).toLocaleString('fr-MA')} MAD
                     </span>
                   ))}
@@ -275,19 +274,11 @@ export default function AdminNewProductPage() {
         )}
 
         {/* Submit */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="font-label-caps text-label-caps bg-primary text-on-primary px-8 py-4 hover:bg-primary-fixed transition-colors duration-300 tracking-widest disabled:opacity-50"
-          >
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button type="submit" disabled={saving} className="btn-gold-filled" style={{ fontSize: '0.65rem', opacity: saving ? 0.5 : 1 }}>
             {saving ? 'Création en cours...' : 'CRÉER LE PRODUIT'}
           </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/produits')}
-            className="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors px-8 py-4"
-          >
+          <button type="button" onClick={() => router.push('/admin/produits')} className="btn-gold" style={{ fontSize: '0.65rem' }}>
             Annuler
           </button>
         </div>
