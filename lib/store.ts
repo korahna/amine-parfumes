@@ -9,7 +9,7 @@ export interface CartItem {
   volume?: number
   image: string
   quantity: number
-  type: 'full' | 'decant'
+  type: 'full' | 'decant' | 'pack'
 }
 
 interface CartState {
@@ -91,10 +91,10 @@ export const useCartStore = create<CartState>()(
 interface FilterState {
   category: string | null
   scentFamily: string | null
-  type: 'full' | 'decant' | null
+  type: 'full' | 'decant' | 'pack' | null
   setCategory: (category: string | null) => void
   setScentFamily: (family: string | null) => void
-  setType: (type: 'full' | 'decant' | null) => void
+  setType: (type: 'full' | 'decant' | 'pack' | null) => void
   resetFilters: () => void
 }
 
