@@ -18,7 +18,7 @@ export function Footer() {
             <p style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }} className="text-sm leading-relaxed max-w-xs">
               Des fragrances d&apos;exception, livrées chez vous.
             </p>
-            <div className="flex items-center gap-4 mt-6">
+            <div className="flex items-center gap-4 mt-6 mb-6">
               <a href="#" style={{ color: 'var(--fg-subtle)' }} className="hover:text-[var(--gold-400)] transition-colors">
                 <Instagram size={18} />
               </a>
@@ -26,6 +26,20 @@ export function Footer() {
                 <Facebook size={18} />
               </a>
             </div>
+            <ul className="space-y-2">
+              {[
+                { href: '/politique-de-confidentialite', label: 'Politique de confidentialité' },
+                { href: '/conditions-de-service', label: 'Conditions de service' },
+                { href: '/politique-d-expedition', label: 'Politique d\'expédition' },
+                { href: '/politique-de-retour', label: 'Politique de retour' },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)', fontSize: '0.82rem' }} className="hover:text-[var(--gold-400)] transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Links */}
@@ -43,19 +57,6 @@ export function Footer() {
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }} className="text-sm hover:text-[var(--gold-400)] transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-              <li className="divider-gold" style={{ margin: '0.5rem 0' }} />
-              {[
-                { href: '/politique-de-confidentialite', label: 'Politique de confidentialité' },
-                { href: '/conditions-de-service', label: 'Conditions de service' },
-                { href: '/politique-d-expedition', label: 'Politique d\'expédition' },
-                { href: '/politique-de-retour', label: 'Politique de retour' },
-              ].map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-subtle)' }} className="text-xs hover:text-[var(--gold-400)] transition-colors">
                     {l.label}
                   </Link>
                 </li>
