@@ -47,6 +47,19 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li className="divider-gold" style={{ margin: '0.5rem 0' }} />
+              {[
+                { href: '/politique-de-confidentialite', label: 'Politique de confidentialité' },
+                { href: '/conditions-de-service', label: 'Conditions de service' },
+                { href: '/politique-d-expedition', label: 'Politique d\'expédition' },
+                { href: '/politique-de-retour', label: 'Politique de retour' },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-subtle)' }} className="text-xs hover:text-[var(--gold-400)] transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
