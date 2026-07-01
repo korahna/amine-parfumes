@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, X, Search } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
+import { Navbar } from '@/components/shared/Navbar'
 
 interface Product {
   id: string
@@ -25,7 +26,16 @@ const PAGE_TITLES: Record<string, string> = {
   homme: 'Parfums pour Homme',
   femme: 'Parfums pour Femme',
   decant: 'Échantillons & Décants',
+  packs: 'Packs & Coffrets',
 }
+
+const CATEGORIES = [
+  { href: '/boutique', label: 'Tous', icon: '✦' },
+  { href: '/boutique?type=homme', label: 'Homme', icon: '♂' },
+  { href: '/boutique?type=femme', label: 'Femme', icon: '♀' },
+  { href: '/boutique?type=decant', label: 'Décants', icon: '🧪' },
+  { href: '/boutique?type=packs', label: 'Packs', icon: '🎁' },
+]
 
 const categories = [
   { value: '', fr: 'Tous', ar: 'الكل' },
@@ -77,6 +87,7 @@ function BoutiqueContent() {
       if (urlType === 'homme' && p.category !== 'Pour Lui') return false
       if (urlType === 'femme' && p.category !== 'Pour Elle') return false
       if (urlType === 'decant' && p.type !== 'decant') return false
+      if (urlType === 'packs' && p.category !== 'Packs') return false
       // Sidebar filters (only when not URL-filtered)
       if (!isFiltered && category && p.category !== category) return false
       if (scentFamily) {
@@ -111,7 +122,48 @@ function BoutiqueContent() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', paddingTop: '5.5rem', background: 'var(--bg-base)' }}>
+    <>
+      <Navbar />
+      {/* Hero Banner */}
+      <section style={{ position: 'relative', paddingTop: '5.5rem', background: 'linear-gradient(180deg, #080b14 0%, var(--bg-base) 100%)', borderBottom: '1px solid var(--border-gold)' }}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8" style={{ padding: '3.5rem 0 2.5rem', textAlign: 'center' }}>
+          {/* Logo */}
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.75rem', textDecoration: 'none' }}>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: '1px solid rgba(201,162,39,0.25)' }}>
+              <Image src="/images/logo.png" alt="Amine Parfumes" fill className="object-cover" />
+            </div>
+            <div>
+              <p style={{ fontFamily: 'var(--font-display)', color: 'var(--gold-400)', fontSize: '1.25rem', lineHeight: 1, letterSpacing: '0.05em' }}>Amine</p>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gold-600)', fontSize: '0.6rem', letterSpacing: '0.28em', textTransform: 'uppercase', marginTop: 2 }}>Parfumes</p>
+            </div>
+          </Link>
+
+          {/* Category links */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {CATEGORIES.map((cat) => {
+              const isActive = cat.href === '/boutique' ? !urlType : urlType === cat.href.split('=')[1]
+              return (
+                <Link key={cat.href} href={cat.href}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '0.5rem 1.1rem', borderRadius: 6,
+                    fontFamily: 'var(--font-body)', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase',
+                    textDecoration: 'none', transition: 'all 0.2s ease',
+                    color: isActive ? 'var(--gold-400)' : 'var(--fg-muted)',
+                    background: isActive ? 'rgba(201,162,39,0.1)' : 'transparent',
+                    border: isActive ? '1px solid rgba(201,162,39,0.3)' : '1px solid transparent',
+                  }}
+                  className="hover:text-[var(--gold-400)] hover:bg-[rgba(201,162,39,0.06)]"
+                >
+                  <span style={{ fontSize: '0.85rem' }}>{cat.icon}</span>
+                  {cat.label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
         {/* Header */}
         <div style={{ marginBottom: '1.75rem' }}>
@@ -248,6 +300,7 @@ function BoutiqueContent() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

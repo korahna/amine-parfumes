@@ -23,6 +23,7 @@ export function Navbar() {
     { href: '/boutique?type=homme', label: 'Homme' },
     { href: '/boutique?type=femme', label: 'Femme' },
     { href: '/boutique?type=decant', label: 'Décants' },
+    { href: '/boutique?type=packs', label: 'Packs' },
   ]
 
   const navBg = scrolled
