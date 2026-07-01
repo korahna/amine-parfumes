@@ -257,9 +257,8 @@ textarea.input-luxury { resize: vertical; }
   to { transform: rotate(360deg); }
 }
 
-.product-card, .category-card, .btn-gold, .btn-gold-filled {
+.btn-gold, .btn-gold-filled {
   will-change: transform;
-  transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: reduce) {

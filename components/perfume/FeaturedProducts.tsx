@@ -44,6 +44,7 @@ export function FeaturedProducts({ products, title = 'Nos Meilleures Ventes', su
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.5, delay: i * 0.08 }}
+              style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden' }}
             >
               <ProductCard {...product} />
             </motion.div>
