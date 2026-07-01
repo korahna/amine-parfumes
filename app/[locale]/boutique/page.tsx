@@ -34,6 +34,7 @@ const categories = [
   { value: 'Pour Elle', fr: 'Pour Elle', ar: 'نسائي' },
   { value: 'Pour Lui', fr: 'Pour Lui', ar: 'رجالي' },
   { value: 'Unisexe', fr: 'Unisexe', ar: 'مختلط' },
+  { value: 'Packs', fr: 'Packs', ar: 'حزم' },
 ]
 
 const scentFamilies = [
