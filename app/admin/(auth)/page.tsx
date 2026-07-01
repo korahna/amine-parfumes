@@ -14,17 +14,15 @@ interface Order {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ revenue: 0, orders: 0, pending: 0 })
+  const [stats, setStats] = useState({ revenue: 0, orders: 0, pending: 0, products: 0 })
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-
   const [newOrderAlert, setNewOrderAlert] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
 
     const fetchData = async () => {
-      // Fetch orders
       const { data: orders } = await supabase
         .from('orders')
         .select('id, customer_name, total, status, created_at')
@@ -33,21 +31,19 @@ export default function AdminDashboard() {
       if (orders) {
         const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0)
         const pending = orders.filter((o) => o.status === 'pending').length
-        setStats({ revenue, orders: orders.length, pending })
+        setStats((prev) => ({ ...prev, revenue, orders: orders.length, pending }))
         setRecentOrders(orders.slice(0, 5))
       }
 
-      // Fetch product count
       const { count } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
 
-      setStats((prev) => ({ ...prev, products: count ?? 0 } as typeof prev))
+      setStats((prev) => ({ ...prev, products: count ?? 0 }))
       setLoading(false)
     }
     fetchData()
 
-    // Realtime subscription for new orders
     const channel = supabase
       .channel('dashboard_orders')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
@@ -62,156 +58,122 @@ export default function AdminDashboard() {
         setNewOrderAlert(`Nouvelle commande de ${newOrder.customer_name} — ${Number(newOrder.total).toLocaleString('fr-MA')} MAD`)
         setTimeout(() => setNewOrderAlert(null), 5000)
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
-        const updated = payload.new as Order
-        setRecentOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
-      })
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
-  const statusStyles: Record<string, string> = {
-    pending: 'bg-primary/10 text-primary border border-primary/20',
-    confirmed: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-    shipped: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-    delivered: 'bg-green-500/10 text-green-400 border border-green-500/20',
-    cancelled: 'bg-red-500/10 text-red-400 border border-red-500/20',
+  const statusStyles: Record<string, React.CSSProperties> = {
+    pending:   { background: 'rgba(201,162,39,0.1)', color: '#c9a227', border: '1px solid rgba(201,162,39,0.2)' },
+    confirmed: { background: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.2)' },
+    shipped:   { background: 'rgba(168,85,247,0.1)', color: '#a78bfa', border: '1px solid rgba(168,85,247,0.2)' },
+    delivered: { background: 'rgba(34,197,94,0.1)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.2)' },
+    cancelled: { background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' },
   }
 
   const statusLabels: Record<string, string> = {
-    pending: 'En attente',
-    confirmed: 'Confirmée',
-    shipped: 'Expédiée',
-    delivered: 'Livrée',
-    cancelled: 'Annulée',
+    pending: 'En attente', confirmed: 'Confirmée', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée',
   }
 
+  const card: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '1.5rem' }
+
   return (
-    <div className="flex flex-col gap-stack-lg">
-      {/* New order alert */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Alert */}
       {newOrderAlert && (
-        <div className="bg-primary/10 border border-primary/30 rounded-lg px-6 py-4 flex items-center gap-3 animate-in fade-in duration-300">
-          <Bell size={20} className="text-primary" />
-          <span className="font-body-md text-body-md text-primary">{newOrderAlert}</span>
+        <div style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.3)', borderRadius: 'var(--r-md)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Bell size={20} style={{ color: 'var(--gold-400)' }} />
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--gold-400)' }}>{newOrderAlert}</span>
         </div>
       )}
 
-      {/* Welcome Section */}
-      <section className="flex flex-col gap-stack-sm">
-        <h2 className="font-headline-md text-headline-md text-on-surface">Overview</h2>
-        <p className="font-body-md text-body-md text-on-surface-variant">Aperçu de votre boutique</p>
+      {/* Header */}
+      <section>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: 'var(--fg-primary)' }}>Overview</h2>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-muted)' }}>Aperçu de votre boutique</p>
       </section>
 
-      {/* Stats Bento Grid */}
-      <section className="grid grid-cols-2 gap-4">
-        {/* Revenue Card */}
-        <div className="bg-surface-container-low p-6 rounded-lg flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-on-surface-variant">
-            <Wallet size={20} />
-            <span className="font-label-caps text-label-caps">Revenue</span>
+      {/* Stats */}
+      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div style={card}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-muted)', marginBottom: '0.75rem' }}>
+            <Wallet size={18} />
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Revenue</span>
           </div>
-          {loading ? (
-            <div className="h-8 w-32 skeleton rounded" />
-          ) : (
-            <div className="font-headline-md text-headline-md text-primary">
-              {stats.revenue.toLocaleString('fr-MA')} MAD
-            </div>
+          {loading ? <div style={{ height: 32, width: 128, background: 'var(--bg-raised)', borderRadius: 4 }} /> : (
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--gold-400)' }}>{stats.revenue.toLocaleString('fr-MA')} MAD</div>
           )}
         </div>
-
-        {/* Orders Card */}
-        <div className="bg-surface-container-low p-6 rounded-lg flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-on-surface-variant">
-            <ShoppingBag size={20} />
-            <span className="font-label-caps text-label-caps">Commandes</span>
+        <div style={card}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-muted)', marginBottom: '0.75rem' }}>
+            <ShoppingBag size={18} />
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Commandes</span>
           </div>
-          {loading ? (
-            <div className="h-8 w-16 skeleton rounded" />
-          ) : (
-            <div className="font-headline-md text-headline-md text-primary">{stats.orders}</div>
+          {loading ? <div style={{ height: 32, width: 64, background: 'var(--bg-raised)', borderRadius: 4 }} /> : (
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--gold-400)' }}>{stats.orders}</div>
           )}
           {!loading && stats.pending > 0 && (
-            <div className="text-sm text-on-surface-variant">
-              {stats.pending} en attente
-            </div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.78rem', color: 'var(--fg-muted)', marginTop: 4 }}>{stats.pending} en attente</div>
           )}
         </div>
-
-        {/* Products Card (Full width) */}
-        <div className="bg-surface-container-low p-6 rounded-lg flex flex-col gap-4 col-span-2 relative overflow-hidden">
-          <div className="absolute inset-0 bg-surface-container-highest opacity-20 skeleton z-0" />
-          <div className="relative z-10 flex justify-between items-center">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-on-surface-variant">
-                <Package size={20} />
-                <span className="font-label-caps text-label-caps">Produits en catalogue</span>
+        <div style={{ ...card, gridColumn: 'span 2' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-muted)', marginBottom: '0.5rem' }}>
+                <Package size={18} />
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Produits en catalogue</span>
               </div>
-              {loading ? (
-                <div className="h-8 w-16 skeleton rounded" />
-              ) : (
-                <div className="font-headline-md text-headline-md text-on-surface">
-                  {(stats as { products?: number }).products ?? 0}
-                </div>
+              {loading ? <div style={{ height: 32, width: 64, background: 'var(--bg-raised)', borderRadius: 4 }} /> : (
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--fg-primary)' }}>{stats.products}</div>
               )}
             </div>
-            <Link href="/admin/produits" className="text-primary opacity-50 hover:opacity-80 transition-opacity">
-              <ArrowRight size={32} />
+            <Link href="/admin/produits" style={{ color: 'var(--gold-400)', opacity: 0.5 }} className="hover:opacity-80 transition-opacity">
+              <ArrowRight size={28} />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Recent Orders */}
-      <section className="flex flex-col gap-stack-md">
-        <div className="flex justify-between items-end">
-          <h3 className="font-body-lg text-body-lg text-on-surface">Commandes récentes</h3>
-          <Link href="/admin/commandes" className="font-label-caps text-label-caps text-primary hover:opacity-70 transition-opacity">
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-body)', fontSize: '0.95rem', color: 'var(--fg-primary)' }}>Commandes récentes</h3>
+          <Link href="/admin/commandes" style={{ fontFamily: 'var(--font-body)', fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold-400)', textDecoration: 'none' }} className="hover:opacity-70 transition-opacity">
             VOIR TOUT
           </Link>
         </div>
-        <div className="flex flex-col gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {loading ? (
-            <>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="bg-surface-container p-4 flex justify-between items-center rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full skeleton" />
-                    <div className="flex flex-col gap-2">
-                      <div className="h-4 w-20 skeleton rounded" />
-                      <div className="h-3 w-16 skeleton rounded" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="h-4 w-16 skeleton rounded" />
-                    <div className="h-5 w-14 skeleton rounded" />
+            [0, 1, 2].map((i) => (
+              <div key={i} style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-raised)' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ height: 16, width: 80, background: 'var(--bg-raised)', borderRadius: 4 }} />
+                    <div style={{ height: 12, width: 64, background: 'var(--bg-raised)', borderRadius: 4 }} />
                   </div>
                 </div>
-              ))}
-            </>
+              </div>
+            ))
           ) : recentOrders.length === 0 ? (
-            <p className="text-on-surface-variant font-body-md text-body-md py-4">Aucune commande pour le moment.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-muted)', padding: '1rem 0' }}>Aucune commande pour le moment.</p>
           ) : (
             recentOrders.map((order) => (
-              <Link key={order.id} href="/admin/commandes" className="bg-surface-container p-4 flex justify-between items-center rounded-lg hover:bg-surface-container-highest transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-surface-container-highest rounded-full flex items-center justify-center text-on-surface-variant">
+              <Link key={order.id} href="/admin/commandes" style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none', color: 'inherit', transition: 'border-color 0.15s' }} className="hover:border-[var(--border-mid)]">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--fg-subtle)' }}>
                     <User size={20} />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-body-md text-body-md text-on-surface">{order.customer_name}</span>
-                    <span className="text-sm text-on-surface-variant">
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-primary)' }}>{order.customer_name}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--fg-subtle)' }}>
                       {new Date(order.created_at).toLocaleDateString('fr-MA', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="font-body-md text-body-md text-on-surface">
-                    {Number(order.total).toLocaleString('fr-MA')} MAD
-                  </span>
-                  <span className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded ${statusStyles[order.status] ?? ''}`}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.82rem', color: 'var(--fg-primary)' }}>{Number(order.total).toLocaleString('fr-MA')} MAD</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '2px 8px', borderRadius: 100, ...statusStyles[order.status] }}>
                     {statusLabels[order.status] ?? order.status}
                   </span>
                 </div>
