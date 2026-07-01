@@ -72,7 +72,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
                 <Phone size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
-                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">{process.env.NEXT_PUBLIC_PHONE || '+212 6XX XXX XXX'}</span>
+                <span style={{ fontFamily: 'var(--font-body)' }} className="text-sm">{process.env.NEXT_PUBLIC_PHONE || '+212 769 045 089'}</span>
               </li>
               <li className="flex items-center gap-3" style={{ color: 'var(--fg-muted)' }}>
                 <Mail size={14} style={{ color: 'var(--gold-600)' }} className="flex-shrink-0" />
