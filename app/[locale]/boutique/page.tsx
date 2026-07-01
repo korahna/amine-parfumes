@@ -7,7 +7,6 @@ import { useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, X, Search } from 'lucide-react'
 import { useCartStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
-import { Navbar } from '@/components/shared/Navbar'
 
 interface Product {
   id: string
@@ -123,7 +122,6 @@ function BoutiqueContent() {
 
   return (
     <>
-      <Navbar />
       {/* Hero Banner */}
       <section style={{ position: 'relative', paddingTop: '5.5rem', background: 'linear-gradient(180deg, #080b14 0%, var(--bg-base) 100%)', borderBottom: '1px solid var(--border-gold)' }}>
         <div className="max-w-7xl mx-auto px-4 lg:px-8" style={{ padding: '3.5rem 0 2.5rem', textAlign: 'center' }}>
