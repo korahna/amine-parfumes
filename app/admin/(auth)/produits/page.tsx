@@ -12,7 +12,7 @@ interface Product {
   name_fr: string
   name_ar: string
   brand: string
-  type: 'full' | 'decant'
+  type: 'full' | 'decant' | 'pack'
   price: number
   volume: number | null
   images: string[]
@@ -97,7 +97,7 @@ export default function AdminProductsPage() {
                   )}
                 </div>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.72rem', color: 'var(--fg-muted)' }}>
-                  {product.brand} · {product.type === 'decant' ? 'Échantillon' : 'Flacon'} {product.volume ? `· ${product.volume}ml` : ''}
+                  {product.brand} · {product.type === 'decant' ? 'Échantillon' : product.type === 'pack' ? 'Pack' : 'Flacon'} {product.volume ? `· ${product.volume}ml` : ''}
                 </p>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.68rem', color: 'var(--fg-subtle)' }}>
                   {product.category ?? 'Sans catégorie'}

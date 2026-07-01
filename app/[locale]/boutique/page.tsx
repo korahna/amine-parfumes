@@ -15,7 +15,7 @@ interface Product {
   name_fr: string
   name_ar: string
   brand: string
-  type: 'full' | 'decant'
+  type: 'full' | 'decant' | 'pack'
   price: number
   images: string[]
   scent_notes: { top: string[]; heart: string[]; base: string[] }
@@ -80,7 +80,7 @@ function BoutiqueContent() {
       if (urlType === 'homme' && p.category !== 'Pour Lui') return false
       if (urlType === 'femme' && p.category !== 'Pour Elle') return false
       if (urlType === 'decant' && p.type !== 'decant') return false
-      if (urlType === 'packs' && p.category !== 'Packs') return false
+      if (urlType === 'packs' && p.type !== 'pack') return false
       // Sidebar filters (only when not URL-filtered)
       if (!isFiltered && category && p.category !== category) return false
       if (scentFamily) {

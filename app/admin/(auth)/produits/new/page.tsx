@@ -25,7 +25,7 @@ export default function AdminNewProductPage() {
     description_fr: '',
     description_ar: '',
     brand: '',
-    type: 'full' as 'full' | 'decant',
+    type: 'full' as 'full' | 'decant' | 'pack',
     category: '',
     slug: '',
     featured: false,
@@ -183,6 +183,7 @@ export default function AdminNewProductPage() {
               <select name="type" value={form.type} onChange={handleChange} className="input-underline w-full font-body-md text-on-surface py-2 bg-transparent">
                 <option value="full">Parfum Complet</option>
                 <option value="decant">Échantillon</option>
+                <option value="pack">Pack</option>
               </select>
             </div>
           </div>
